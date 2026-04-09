@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Store site</title>
+  <link rel="stylesheet" href="static/style.css?v=storesite1" />
+</head>
+<body>
+  <div id="app" class="app">
+
+    <header class="app-header" id="appHeader" hidden>
+      <button type="button" class="back-btn" id="backBtn" hidden aria-label="Back">&#8592;</button>
+      <div class="header-info">
+        <h1 class="title" id="hdr-title"></h1>
+        <p class="balance" id="hdr-balance"></p>
+      </div>
+      <label class="lang-picker">
+        <select id="locale-select" aria-label="Language"></select>
+      </label>
+    </header>
+
+    <nav class="site-nav-desktop" id="siteNavDesktop" hidden role="navigation" aria-label="Primary">
+      <button type="button" class="bnav-btn is-active" data-tab="shop">
+        <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.16 6.84l.01.03L8.4 10H18l1.1-4H6.17l.99 .84zM2 2h3.27l3.02 6.37L6.15 12h11.7l2.76-5H8.53L6.27 2H2z"/></svg>
+        <span class="bnav-label"></span>
+      </button>
+      <button type="button" class="bnav-btn" data-tab="promo">
+        <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+        <span class="bnav-label"></span>
+      </button>
+      <button type="button" class="bnav-btn" data-tab="reviews">
+        <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        <span class="bnav-label"></span>
+      </button>
+      <button type="button" class="bnav-btn" data-tab="contacts">
+        <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        <span class="bnav-label"></span>
+      </button>
+    </nav>
+
+    <main class="main" id="appContent">
+
+      <div id="screen-auth" class="screen">
+        <p class="msg" id="auth-msg"></p>
+      </div>
+
+      <div id="screen-language" class="screen" hidden>
+        <h2 class="screen-title" id="language-title"></h2>
+        <div id="language-buttons" class="language-buttons" role="group"></div>
+      </div>
+
+      <div id="screen-expired" class="screen" hidden>
+        <p class="msg" id="expired-msg"></p>
+      </div>
+
+      <div id="screen-loading" class="screen" hidden>
+        <p class="msg" id="loading-msg">…</p>
+      </div>
+
+      <div id="screen-shop" class="screen" hidden>
+        <div id="shop-pane-cities" class="shop-cities-bento">
+          <h2 class="screen-title screen-title--shop" id="cities-title"></h2>
+          <div id="cities-grid" class="btn-grid cities-grid bento-full"></div>
+        </div>
+        <div id="shop-pane-positions" hidden>
+          <h2 class="screen-title" id="positions-title"></h2>
+          <div id="positions-content"></div>
+        </div>
+        <div id="shop-pane-structures" hidden>
+          <h2 class="screen-title" id="structures-title"></h2>
+          <div id="structures-content"></div>
+        </div>
+        <div id="shop-pane-confirm" hidden>
+          <h2 class="screen-title" id="confirm-title"></h2>
+          <div id="confirm-content"></div>
+        </div>
+        <div id="shop-pane-checkout-pay" hidden>
+          <h2 class="screen-title" id="checkout-pay-title"></h2>
+          <div id="checkout-instruction" class="checkout-invoice"></div>
+          <div id="checkout-tx-step" hidden>
+            <label class="field-label" for="checkout-tx-input" id="checkout-tx-label"></label>
+            <input type="text" id="checkout-tx-input" class="text-input" autocomplete="off" />
+            <div id="checkout-tx-actions" class="checkout-tx-actions payment-actions-row">
+              <button type="button" class="btn-primary" id="checkout-tx-submit"></button>
+              <button type="button" class="btn-secondary" id="checkout-qr-btn"></button>
+            </div>
+          </div>
+          <div id="checkout-main-actions" class="payment-actions-row">
+            <button type="button" class="btn-primary" id="checkout-check-btn"></button>
+            <button type="button" class="btn-secondary" id="checkout-cancel-btn"></button>
+          </div>
+          <p class="msg" id="checkout-pay-result"></p>
+        </div>
+        <div id="shop-pane-result" hidden>
+          <h2 class="screen-title" id="result-title"></h2>
+          <pre class="result-body" id="result-body"></pre>
+          <button type="button" class="btn-primary" id="result-ok"></button>
+        </div>
+      </div>
+
+      <div id="screen-promo" class="screen" hidden>
+        <h2 class="screen-title" id="promo-title"></h2>
+        <label class="field-label" for="promo-input" id="promo-hint-label"></label>
+        <input type="text" id="promo-input" class="text-input" autocomplete="off" />
+        <button type="button" class="btn-primary" id="promo-apply-btn"></button>
+        <p class="msg" id="promo-result"></p>
+      </div>
+
+      <div id="screen-reviews" class="screen" hidden>
+        <h2 class="screen-title" id="reviews-title"></h2>
+        <div id="reviews-content"></div>
+      </div>
+
+      <div id="screen-contacts" class="screen" hidden>
+        <h2 class="screen-title" id="contacts-title"></h2>
+        <div id="contacts-content" class="contacts-list"></div>
+      </div>
+
+    </main>
+
+    <nav class="bottom-nav" id="bottomNav" hidden>
+      <button type="button" class="bnav-btn is-active" data-tab="shop">
+        <svg viewBox="0 0 24 24" class="bnav-icon"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.16 6.84l.01.03L8.4 10H18l1.1-4H6.17l.99 .84zM2 2h3.27l3.02 6.37L6.15 12h11.7l2.76-5H8.53L6.27 2H2z"/></svg>
+        <span class="bnav-label" id="bnav-shop"></span>
+      </button>
+      <button type="button" class="bnav-btn" data-tab="promo">
+        <svg viewBox="0 0 24 24" class="bnav-icon"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+        <span class="bnav-label" id="bnav-promo"></span>
+      </button>
+      <button type="button" class="bnav-btn" data-tab="reviews">
+        <svg viewBox="0 0 24 24" class="bnav-icon"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        <span class="bnav-label" id="bnav-reviews"></span>
+      </button>
+      <button type="button" class="bnav-btn" data-tab="contacts">
+        <svg viewBox="0 0 24 24" class="bnav-icon"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        <span class="bnav-label" id="bnav-contacts"></span>
+      </button>
+    </nav>
+
+    <div id="qr-modal" class="qr-modal-root" hidden role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+      <div class="qr-modal-backdrop" id="qr-modal-backdrop"></div>
+      <div class="qr-modal-panel">
+        <div class="qr-modal-header">
+          <h2 class="qr-modal-title" id="qr-modal-title"></h2>
+          <button type="button" class="qr-modal-close" id="qr-modal-close" aria-label="">&times;</button>
+        </div>
+        <img id="qr-modal-img" class="payment-qr-img" alt="" width="220" height="220" />
+      </div>
+    </div>
+
+    <div id="payment-cancel-modal" class="qr-modal-root payment-cancel-modal-root" hidden role="dialog" aria-modal="true" aria-labelledby="payment-cancel-modal-msg">
+      <div class="qr-modal-backdrop" id="payment-cancel-modal-backdrop"></div>
+      <div class="qr-modal-panel payment-cancel-panel">
+        <p class="payment-cancel-msg" id="payment-cancel-modal-msg"></p>
+        <div class="payment-cancel-actions">
+          <button type="button" class="btn-primary" id="payment-cancel-yes"></button>
+          <button type="button" class="btn-secondary" id="payment-cancel-no"></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script src="static/app.bundle.js?v=storesite1"></script>
+</body>
+</html>

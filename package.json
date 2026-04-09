@@ -1,0 +1,18 @@
+{
+  "name": "bots-store-site",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Public store web UI (forked from matrix widget; adapt here only)",
+  "scripts": {
+    "build": "NODE_ENV=production node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "preview": "npm run build && npx --yes serve . -l 4173 --no-request-logging",
+    "serve": "npx --yes serve . -l 4173 --no-request-logging",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "vitest": "^3.0.5"
+  }
+}
