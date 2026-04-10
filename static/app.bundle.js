@@ -1359,6 +1359,17 @@
       navigate("#shop", { resetStack: true });
     };
   }
+  function formatReviewDateDdMmYyyy(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    var dd = d.getDate();
+    var mm = d.getMonth() + 1;
+    var pad = function(n) {
+      return (n < 10 ? "0" : "") + n;
+    };
+    return pad(dd) + "." + pad(mm) + "." + d.getFullYear();
+  }
   async function showReviews(page, token) {
     var cont = document.getElementById("reviews-content");
     var title = document.getElementById("reviews-title");
@@ -1378,7 +1389,12 @@
         html += '<p class="msg">' + escHtml(t("review.no_reviews") || "No reviews") + "</p>";
       }
       reviews.forEach(function(rv) {
-        html += '<div class="review-card"><div class="review-stars">' + renderStarsHtml(rv.rating) + "</div>" + (rv.text ? '<p class="review-text">' + escHtml(rv.text) + "</p>" : "") + '<p class="review-meta">' + escHtml(rv.position_name || "") + (rv.city_name ? ", " + escHtml(rv.city_name) : "") + "</p></div>";
+        var dateStr = formatReviewDateDdMmYyyy(rv.created_at);
+        var timeHtml = "";
+        if (dateStr) {
+          timeHtml = '<time class="review-date" datetime="' + escHtml(String(rv.created_at)) + '">' + escHtml(dateStr) + "</time>";
+        }
+        html += '<div class="review-card"><div class="review-card-head"><div class="review-stars">' + renderStarsHtml(rv.rating) + "</div>" + timeHtml + "</div>" + (rv.text ? '<p class="review-text">' + escHtml(rv.text) + "</p>" : "") + '<p class="review-meta">' + escHtml(rv.position_name || "") + (rv.city_name ? ", " + escHtml(rv.city_name) : "") + "</p></div>";
       });
       if (data.has_next || page > 0) {
         html += '<div class="pagination">';

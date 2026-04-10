@@ -14,24 +14,27 @@
         <div class="header-info">
           <h1 class="title" id="hdr-title"></h1>
         </div>
+        <nav class="site-nav-desktop" id="siteNavDesktop" hidden role="navigation" aria-label="Primary">
+          <button type="button" class="bnav-btn is-active" data-tab="shop">
+            <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.16 6.84l.01.03L8.4 10H18l1.1-4H6.17l.99 .84zM2 2h3.27l3.02 6.37L6.15 12h11.7l2.76-5H8.53L6.27 2H2z"/></svg>
+            <span class="bnav-label"></span>
+          </button>
+          <button type="button" class="bnav-btn" data-tab="reviews">
+            <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            <span class="bnav-label"></span>
+          </button>
+          <button type="button" class="bnav-btn" data-tab="contacts">
+            <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span class="bnav-label"></span>
+          </button>
+        </nav>
         <label class="lang-picker">
+          <span class="lang-picker-face" aria-hidden="true">
+            <svg class="lang-picker-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.45 2.1 1.17 2.83l-.83.1zm6.77-2.24A6.965 6.965 0 0017.93 13h-3.86c-.21 1.45-.84 2.78-1.76 3.76l3.46 2.93zm.04-4.49h3.89c.32-1.01.5-2.08.5-3.2 0-1.56-.4-3.03-1.1-4.31l-3.33 2.15c.18.78.28 1.58.28 2.46 0 .84-.1 1.65-.24 2.42zM12 4.03c.83 0 1.64.15 2.38.42l-1.42 3.26c-.21-.07-.43-.1-.66-.1-.5 0-.96.14-1.38.37L7.77 5.12A7.963 7.963 0 0112 4.03zM5.28 7.01A7.963 7.963 0 004.07 11h3.89c.07-.78.22-1.53.45-2.24L5.28 7.01zm2.17-3.39l2.67 4.45c.42-.23.88-.37 1.38-.37.23 0 .45.03.66.1l1.42-3.26A7.963 7.963 0 007.45 3.62zm7.89 14.45l-3.33-2.15c-.42.64-.96 1.15-1.59 1.51l1.42 3.26c.74-.27 1.55-.42 2.38-.42.31 0 .61.03.9.08l.2-2.28z"/></svg>
+          </span>
           <select id="locale-select" aria-label="Language"></select>
         </label>
       </div>
-      <nav class="site-nav-desktop" id="siteNavDesktop" hidden role="navigation" aria-label="Primary">
-        <button type="button" class="bnav-btn is-active" data-tab="shop">
-          <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.16 6.84l.01.03L8.4 10H18l1.1-4H6.17l.99 .84zM2 2h3.27l3.02 6.37L6.15 12h11.7l2.76-5H8.53L6.27 2H2z"/></svg>
-          <span class="bnav-label"></span>
-        </button>
-        <button type="button" class="bnav-btn" data-tab="reviews">
-          <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-          <span class="bnav-label"></span>
-        </button>
-        <button type="button" class="bnav-btn" data-tab="contacts">
-          <svg viewBox="0 0 24 24" class="bnav-icon" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-          <span class="bnav-label"></span>
-        </button>
-      </nav>
     </header>
 
     <main class="main" id="appContent">
