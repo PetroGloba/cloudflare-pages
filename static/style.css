@@ -164,12 +164,7 @@ body {
   box-sizing: border-box;
 }
 
-.header-info {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
+/* Header store title: fill matches --bg, animated accent glow (ellipsis-safe padding). */
 @keyframes hdr-title-smoke {
   0%,
   100% {
@@ -202,10 +197,18 @@ body {
   }
 }
 
+.header-info {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+
 .header-info .title {
   font-size: 1rem;
   font-weight: 600;
   margin: 0;
+  padding-inline: 0.5rem;
+  padding-block: 0.3rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1238,6 +1241,7 @@ a.contact-line {
     animation: none;
     background: var(--surface);
   }
+  /* Header title: static glow only (see hdr-title-smoke keyframes above). */
   .header-info .title {
     animation: none;
     text-shadow:
