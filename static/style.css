@@ -146,9 +146,9 @@ body {
   top: 0;
   z-index: 20;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: var(--header-h);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   padding: var(--safe-t) 0.75rem 0;
   background: var(--bg);
   border-bottom: 1px solid var(--border-subtle);
@@ -156,21 +156,13 @@ body {
   box-sizing: border-box;
 }
 
-.back-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 1.15rem;
-  cursor: pointer;
-  flex-shrink: 0;
+.header-row--top {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--header-h);
+  box-sizing: border-box;
 }
-.back-btn:active { background: var(--accent); color: #fff; }
 
 .header-info {
   flex: 1;
@@ -184,11 +176,6 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.header-info .balance {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--muted);
 }
 
 .lang-picker { flex-shrink: 0; }
@@ -268,6 +255,11 @@ body {
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.022em;
+}
+
+/* Ensure only one shop sub-pane is visible (some UA/CSS edge cases override [hidden]). */
+#screen-shop > div[id^="shop-pane-"][hidden] {
+  display: none !important;
 }
 
 /* Shop cities: grid shell for optional bento rows (title + full-width strips). */
@@ -856,7 +848,6 @@ body {
 .btn-primary:focus-visible,
 .btn-secondary:focus-visible,
 .btn-nav:focus-visible,
-.back-btn:focus-visible,
 .bnav-btn:focus-visible,
 .btn-grid button:focus-visible,
 .btn-language:focus-visible,
@@ -915,15 +906,22 @@ a.contact-line {
     align-items: stretch;
     justify-content: center;
     gap: 0.35rem;
-    padding: 0.5rem 1rem 0.65rem;
-    margin: 0 auto;
-    max-width: min(72rem, 100%);
-    background: var(--bg);
-    border-bottom: 1px solid var(--border-subtle);
-    position: sticky;
-    top: calc(var(--header-h) + var(--safe-t));
-    z-index: 19;
+    padding: 0 0 0.65rem;
+    margin: 0;
+    max-width: none;
+    background: transparent;
+    border-bottom: none;
+    position: static;
+    z-index: auto;
     box-sizing: border-box;
+  }
+
+  .screen-title--shop {
+    text-align: center;
+  }
+
+  .shop-cities-bento {
+    justify-items: center;
   }
 
   .site-nav-desktop .bnav-btn {
@@ -963,7 +961,8 @@ a.contact-line {
   }
 
   .cities-grid {
-    max-width: 100%;
+    max-width: min(40rem, 100%);
+    margin-inline: auto;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.65rem;
   }
@@ -1007,10 +1006,6 @@ a.contact-line {
 
 @media (min-width: 64rem) {
   .app {
-    max-width: min(80rem, 100%);
-  }
-
-  .site-nav-desktop {
     max-width: min(80rem, 100%);
   }
 

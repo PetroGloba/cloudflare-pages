@@ -2,7 +2,6 @@
 
 export const TAB_ROOTS = {
   shop: "#shop",
-  promo: "#promo",
   reviews: "#reviews",
   contacts: "#contacts",
 };
@@ -43,6 +42,6 @@ export function tabForRoute(name) {
   if (name === "account_payment") return "reviews";
   if (name === "reviews" || name === "review_create") return "reviews";
   if (name === "contacts") return "contacts";
-  if (name === "promo") return "promo";
+  if (name === "promo") return "shop";
   return "shop";
 }

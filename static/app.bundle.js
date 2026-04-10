@@ -172,7 +172,6 @@
   // src/app/router.js
   var TAB_ROOTS = {
     shop: "#shop",
-    promo: "#promo",
     reviews: "#reviews",
     contacts: "#contacts"
   };
@@ -205,7 +204,7 @@
     if (name === "account_payment") return "reviews";
     if (name === "reviews" || name === "review_create") return "reviews";
     if (name === "contacts") return "contacts";
-    if (name === "promo") return "promo";
+    if (name === "promo") return "shop";
     return "shop";
   }
 
@@ -243,7 +242,6 @@
     paymentSubmitTx: "/api/store/payment/submit_tx",
     locale: "/api/store/locale",
     i18n: "/api/store/i18n",
-    promo: "/api/store/promo/activate",
     positions: "/api/store/positions",
     structures: "/api/store/structures",
     accountPay: "/api/store/account/payment",
@@ -478,17 +476,6 @@
     );
   }
   function wireGoBackAndBottomNav() {
-    document.getElementById("backBtn").onclick = function() {
-      if (hasPendingCheckoutInvoice()) {
-        openPaymentCancelModal({
-          onYes: function() {
-            return cancelCheckoutAndNavigateToStructures();
-          }
-        });
-        return;
-      }
-      goBack();
-    };
     document.querySelectorAll(".bnav-btn").forEach(function(btn) {
       btn.onclick = function() {
         var tab = btn.getAttribute("data-tab");
@@ -727,7 +714,6 @@
     "screen-expired",
     "screen-loading",
     "screen-shop",
-    "screen-promo",
     "screen-reviews",
     "screen-contacts"
   ];
@@ -784,17 +770,15 @@
       b.classList.toggle("is-active", b.getAttribute("data-tab") === activeTab);
     });
   }
-  function updateBackBtn(route) {
-    var btn = document.getElementById("backBtn");
-    var isRoot = Object.values(TAB_ROOTS).indexOf("#" + route.name) !== -1;
-    btn.hidden = isRoot && historyStack.length === 0;
-  }
   async function onRouteChange() {
     if (!booted) return;
     var route = parseRoute(location.hash);
+    if (route.name === "promo") {
+      history.replaceState(null, "", "#shop");
+      route = { name: "shop", params: {} };
+    }
     var tab = tabForRoute(route.name);
     updateBottomNav(tab);
-    updateBackBtn(route);
     var token = ++renderToken;
     switch (route.name) {
       case "shop":
@@ -824,11 +808,6 @@
         showScreen("screen-shop");
         showShopPane("shop-pane-result");
         showResult();
-        break;
-      case "promo":
-        showScreen("screen-promo");
-        document.getElementById("promo-result").textContent = "";
-        document.getElementById("promo-input").value = "";
         break;
       case "reviews":
         showScreen("screen-reviews");
@@ -884,9 +863,10 @@
   function applyStoreAppearanceFromMe(meLike) {
     if (!meLike) return;
     applyWidgetBaseTheme(meLike.widget_theme);
-    var key = meLike.emoji_color ? String(meLike.emoji_color).toLowerCase().trim() : "";
-    var valid = { blue: 1, red: 1, green: 1, black: 1 };
-    applyThemeColor(valid[key] ? key : "blue");
+    var t2 = meLike.widget_theme && String(meLike.widget_theme).toLowerCase().trim() || "dark";
+    var byTheme = { dark: "blue", light: "black", red: "red", green: "green" };
+    var accent = byTheme[t2] || "blue";
+    applyThemeColor(accent);
   }
   function guessLocale() {
     var nav = (navigator.language || "uk").slice(0, 2).toLowerCase();
@@ -932,11 +912,9 @@
       return document.getElementById(id);
     };
     var shopL = t("web.widget.tab_shop");
-    var promoL = t("web.widget.tab_promo");
     var revL = t("web.widget.nav_reviews") || t("review.menu_title") || "Reviews";
     var conL = t("web.store_site.nav_contacts");
     $("bnav-shop").textContent = shopL;
-    $("bnav-promo").textContent = promoL;
     $("bnav-reviews").textContent = revL;
     $("bnav-contacts").textContent = conL;
     var desk = document.querySelector(".site-nav-desktop");
@@ -946,7 +924,6 @@
         if (b) b.textContent = label;
       };
       setDeskTab("shop", shopL);
-      setDeskTab("promo", promoL);
       setDeskTab("reviews", revL);
       setDeskTab("contacts", conL);
     }
@@ -969,15 +946,6 @@
     if (qmt) qmt.textContent = t("web.widget.qr_modal_title");
     var qmc = document.getElementById("qr-modal-close");
     if (qmc) qmc.setAttribute("aria-label", t("web.widget.qr_modal_close"));
-    $("promo-title").textContent = t("web.widget.tab_promo");
-    $("promo-hint-label").textContent = t("web.widget.promo_hint");
-    $("promo-apply-btn").textContent = t("web.widget.promo_apply");
-    if (me) {
-      $("hdr-balance").textContent = t("web.store.balance", {
-        balance: me.balance,
-        currency: me.currency
-      });
-    }
   }
   async function showCities(token) {
     showShopPane("shop-pane-cities");
@@ -1695,28 +1663,6 @@
       });
     }
   }
-  function wirePromo() {
-    var promoSubmitting = false;
-    document.getElementById("promo-apply-btn").onclick = async function() {
-      var code = (document.getElementById("promo-input").value || "").trim();
-      if (!code) return;
-      if (promoSubmitting) return;
-      var btn = document.getElementById("promo-apply-btn");
-      promoSubmitting = true;
-      btn.disabled = true;
-      try {
-        var r = await apiFetch(API.promo, { method: "POST", json: { code } });
-        var j = await r.json();
-        document.getElementById("promo-result").textContent = j && j.message || "";
-        if (r.ok && j && j.ok) await refreshMe();
-      } catch (_) {
-        document.getElementById("promo-result").textContent = t("web.store.purchase_failed");
-      } finally {
-        promoSubmitting = false;
-        btn.disabled = false;
-      }
-    };
-  }
   async function refreshMe() {
     try {
       var r = await apiFetch(API.me);
@@ -1851,7 +1797,6 @@
       wireGoBackAndBottomNav();
       wireQrModal();
       wirePaymentCancelModal();
-      wirePromo();
       booted = true;
       if (!visibilityListenerWired) {
         visibilityListenerWired = true;

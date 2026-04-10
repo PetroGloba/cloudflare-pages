@@ -25,4 +25,12 @@ describe("router", () => {
   it("TAB_ROOTS has contacts", () => {
     expect(TAB_ROOTS.contacts).toBe("#contacts");
   });
+
+  it("TAB_ROOTS has no promo (store site)", () => {
+    expect("promo" in TAB_ROOTS).toBe(false);
+  });
+
+  it("tabForRoute maps legacy promo route to shop tab", () => {
+    expect(tabForRoute("promo")).toBe("shop");
+  });
 });
