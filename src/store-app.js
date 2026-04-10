@@ -48,11 +48,15 @@ import { rlog } from "./app/remoteLog.js";
 
   var S = {};
   var me = null;
+  /** Cached GET /api/store/site-contacts; null until first load from boot or contacts tab. */
+  var siteContactsCache = null;
   var historyStack = [];
   var renderToken = 0;
   var booted = false;
   var visibilityRefreshTimer = null;
   var visibilityListenerWired = false;
+  /** document click + Escape for custom lang dropdown (wired once). */
+  var langPickerDocListenersWired = false;
 
   var currentCityId = null;
   var currentCityName = "";
@@ -564,6 +568,64 @@ import { rlog } from "./app/remoteLog.js";
     return d.innerHTML;
   }
 
+  var TG_SVG_FOOTER =
+    '<svg class="site-footer-tg-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>' +
+    "</svg>";
+
+  function isFooterContactUrl(u) {
+    var s = (u || "").trim().toLowerCase();
+    return (
+      s.startsWith("http://") ||
+      s.startsWith("https://") ||
+      s.startsWith("t.me/")
+    );
+  }
+
+  function renderSiteFooterDesktop(contacts, storeName) {
+    var footer = document.getElementById("siteFooterDesktop");
+    var linksEl = document.getElementById("site-footer-links");
+    var poweredEl = document.getElementById("site-footer-powered");
+    if (!footer || !linksEl || !poweredEl) return;
+    linksEl.innerHTML = "";
+    (contacts || []).forEach(function (c) {
+      var u = (c.url || "").trim();
+      if (!isFooterContactUrl(u)) return;
+      var a = document.createElement("a");
+      a.href = u;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.className = "site-footer-contact-link";
+      a.innerHTML = TG_SVG_FOOTER;
+      var span = document.createElement("span");
+      span.textContent = c.title || u || "";
+      a.appendChild(span);
+      linksEl.appendChild(a);
+    });
+    poweredEl.innerHTML = t("web.store_site.footer_powered", {
+      name: escHtml(storeName || ""),
+    });
+    footer.hidden = false;
+  }
+
+  async function loadSiteContactsForShell() {
+    try {
+      var r = await apiFetch(API.siteContacts);
+      if (!r.ok) {
+        siteContactsCache = [];
+        renderSiteFooterDesktop([], me && me.store_name);
+        return;
+      }
+      var data = await r.json();
+      siteContactsCache = data.contacts || [];
+      renderSiteFooterDesktop(siteContactsCache, me && me.store_name);
+    } catch (e) {
+      if (e && e.message === "unauthorized") return;
+      siteContactsCache = [];
+      renderSiteFooterDesktop([], me && me.store_name);
+    }
+  }
+
   /* ================================================================
    *  Screen visibility (low level)
    * ================================================================ */
@@ -754,27 +816,80 @@ import { rlog } from "./app/remoteLog.js";
     }
   }
 
+  function closeLangPickerMenu() {
+    var menu = document.getElementById("lang-picker-menu");
+    var trig = document.getElementById("lang-picker-trigger");
+    if (menu) menu.hidden = true;
+    if (trig) trig.setAttribute("aria-expanded", "false");
+  }
+
+  async function applyLocaleChange(loc) {
+    try {
+      var r = await apiFetch(API.locale, { method: "POST", json: { locale: loc } });
+      if (r.ok) {
+        await loadI18n(loc);
+        if (me) me.locale = loc;
+        refreshLabels();
+        onRouteChange();
+      }
+    } catch (_) { /* ignore */ }
+    closeLangPickerMenu();
+    if (me) fillLocaleSelect(me.locale);
+  }
+
   function fillLocaleSelect(current) {
-    var sel = document.getElementById("locale-select");
-    sel.innerHTML = "";
+    var trig = document.getElementById("lang-picker-trigger");
+    var menu = document.getElementById("lang-picker-menu");
+    if (!trig || !menu) return;
+
+    trig.setAttribute("aria-label", t("web.store.language") || "Language");
+    menu.innerHTML = "";
     LOCALES.forEach(function (L) {
-      var o = document.createElement("option");
-      o.value = L.code;
-      o.textContent = (L.flag ? L.flag + " " : "") + L.label;
-      if (L.code === current) o.selected = true;
-      sel.appendChild(o);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "lang-picker-option";
+      btn.setAttribute("role", "option");
+      btn.setAttribute("data-locale", L.code);
+      btn.textContent = (L.flag ? L.flag + " " : "") + L.label;
+      if (L.code === current) {
+        btn.classList.add("is-current");
+        btn.setAttribute("aria-selected", "true");
+      } else {
+        btn.setAttribute("aria-selected", "false");
+      }
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        void applyLocaleChange(L.code);
+      });
+      menu.appendChild(btn);
     });
-    sel.onchange = async function () {
-      var loc = sel.value;
-      try {
-        var r = await apiFetch(API.locale, { method: "POST", json: { locale: loc } });
-        if (r.ok) {
-          await loadI18n(loc);
-          me.locale = loc;
-          refreshLabels();
-          onRouteChange();
-        }
-      } catch (_) { /* ignore */ }
+
+    if (!langPickerDocListenersWired) {
+      langPickerDocListenersWired = true;
+      document.addEventListener("click", function (e) {
+        var root = document.querySelector(".lang-picker");
+        if (!root || root.contains(e.target)) return;
+        var m = document.getElementById("lang-picker-menu");
+        if (m && !m.hidden) closeLangPickerMenu();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        var m = document.getElementById("lang-picker-menu");
+        if (!m || m.hidden) return;
+        e.preventDefault();
+        closeLangPickerMenu();
+        var t2 = document.getElementById("lang-picker-trigger");
+        if (t2) t2.focus();
+      });
+    }
+
+    trig.onclick = function () {
+      if (menu.hidden) {
+        menu.hidden = false;
+        trig.setAttribute("aria-expanded", "true");
+      } else {
+        closeLangPickerMenu();
+      }
     };
   }
 
@@ -815,6 +930,12 @@ import { rlog } from "./app/remoteLog.js";
     if (qmt) qmt.textContent = t("web.widget.qr_modal_title");
     var qmc = document.getElementById("qr-modal-close");
     if (qmc) qmc.setAttribute("aria-label", t("web.widget.qr_modal_close"));
+    var sfp = document.getElementById("site-footer-powered");
+    if (sfp && me && booted) {
+      sfp.innerHTML = t("web.store_site.footer_powered", {
+        name: escHtml(me.store_name || ""),
+      });
+    }
   }
 
     /* ================================================================
@@ -1661,15 +1782,20 @@ import { rlog } from "./app/remoteLog.js";
     title.textContent = t("web.store_site.contacts_title");
     cont.innerHTML = skeletonLines(4);
     try {
-      var r = await apiFetch(API.siteContacts);
+      var contacts = siteContactsCache;
+      if (contacts === null) {
+        var r = await apiFetch(API.siteContacts);
         if (!r.ok) {
-        if (token !== renderToken) return;
-        cont.innerHTML = '<p class="msg">' + escHtml(t("web.store.purchase_failed")) + "</p>";
-        return;
+          if (token !== renderToken) return;
+          cont.innerHTML =
+            '<p class="msg">' + escHtml(t("web.store.purchase_failed")) + "</p>";
+          return;
+        }
+        var data = await r.json();
+        contacts = data.contacts || [];
+        siteContactsCache = contacts;
       }
-      var data = await r.json();
       if (token !== renderToken) return;
-      var contacts = data.contacts || [];
       cont.innerHTML = "";
       if (contacts.length === 0) {
         var empty = document.createElement("p");
@@ -1848,6 +1974,7 @@ import { rlog } from "./app/remoteLog.js";
       wirePaymentCancelModal();
 
       booted = true;
+      loadSiteContactsForShell();
 
       if (!visibilityListenerWired) {
         visibilityListenerWired = true;

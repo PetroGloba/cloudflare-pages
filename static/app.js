@@ -383,6 +383,7 @@
     } catch (_) { /* i18n may fail during initial auth — ignore */ }
   }
 
+  /** @deprecated Outdated: production HTML uses lang-picker-trigger + lang-picker-menu; see src/store-app.js fillLocaleSelect. */
   function fillLocaleSelect(current) {
     var sel = document.getElementById("locale-select");
     sel.innerHTML = "";
