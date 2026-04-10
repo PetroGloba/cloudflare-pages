@@ -1773,6 +1773,40 @@
     }
     showScreen("screen-auth");
     document.getElementById("auth-msg").textContent = t("web.store_site.session_check");
+    try {
+      dlog("boot: POST /api/public/store-site/bootstrap");
+      var br = await fetch(resolveApiPath("/api/public/store-site/bootstrap"), {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store_bot_id: sid })
+      });
+      if (!br.ok) {
+        dlog("boot: bootstrap http status=" + br.status);
+        rlog("boot_bootstrap_failed http=" + br.status);
+        await loadI18n(PRE_LOCALE_UI);
+        var amB = document.getElementById("auth-msg");
+        if (amB) {
+          if (br.status === 404 || br.status === 403) {
+            amB.textContent = t("web.store_site.need_store_context");
+          } else {
+            amB.textContent = t("errors.generic");
+          }
+        }
+        showScreen("screen-auth");
+        return;
+      }
+    } catch (eB) {
+      dlog("boot: bootstrap fetch failed", eB && eB.message ? eB.message : eB);
+      rlog("boot_bootstrap_fetch_failed", eB && eB.message ? eB.message : String(eB));
+      try {
+        await loadI18n(PRE_LOCALE_UI);
+      } catch (_e) {
+      }
+      var amx = document.getElementById("auth-msg");
+      if (amx) amx.textContent = t("errors.generic");
+      return;
+    }
     var r;
     try {
       dlog("boot: fetching /api/store/me");

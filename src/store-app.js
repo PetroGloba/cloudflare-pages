@@ -1676,7 +1676,7 @@ import { rlog } from "./app/remoteLog.js";
     cont.innerHTML = skeletonLines(4);
     try {
       var r = await apiFetch(API.siteContacts);
-      if (!r.ok) {
+        if (!r.ok) {
         if (token !== renderToken) return;
         cont.innerHTML = '<p class="msg">' + escHtml(t("web.store.purchase_failed")) + "</p>";
         return;
@@ -1795,7 +1795,7 @@ import { rlog } from "./app/remoteLog.js";
    *  Boot
    * ================================================================ */
   async function boot() {
-    await loadI18n(PRE_LOCALE_UI);
+      await loadI18n(PRE_LOCALE_UI);
     var sid = await resolveStoreBotIdEarly();
     if (sid < 1) {
       document.getElementById("auth-msg").textContent = t("web.store_site.need_store_context");
@@ -1805,6 +1805,40 @@ import { rlog } from "./app/remoteLog.js";
 
     showScreen("screen-auth");
     document.getElementById("auth-msg").textContent = t("web.store_site.session_check");
+
+    try {
+      dlog("boot: POST /api/public/store-site/bootstrap");
+      var br = await fetch(resolveApiPath("/api/public/store-site/bootstrap"), {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store_bot_id: sid }),
+      });
+      if (!br.ok) {
+        dlog("boot: bootstrap http status=" + br.status);
+        rlog("boot_bootstrap_failed http=" + br.status);
+        await loadI18n(PRE_LOCALE_UI);
+        var amB = document.getElementById("auth-msg");
+        if (amB) {
+          if (br.status === 404 || br.status === 403) {
+            amB.textContent = t("web.store_site.need_store_context");
+          } else {
+            amB.textContent = t("errors.generic");
+          }
+        }
+        showScreen("screen-auth");
+        return;
+      }
+    } catch (eB) {
+      dlog("boot: bootstrap fetch failed", eB && eB.message ? eB.message : eB);
+      rlog("boot_bootstrap_fetch_failed", eB && eB.message ? eB.message : String(eB));
+      try {
+        await loadI18n(PRE_LOCALE_UI);
+      } catch (_e) { /* ignore */ }
+      var amx = document.getElementById("auth-msg");
+      if (amx) amx.textContent = t("errors.generic");
+      return;
+    }
 
     var r;
     try {
@@ -1817,7 +1851,7 @@ import { rlog } from "./app/remoteLog.js";
         if (r.status === 401) {
           document.getElementById("auth-msg").textContent = t("web.store_site.auth_magic_link_hint");
         } else {
-          document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
+        document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
         }
         return;
       }

@@ -42,6 +42,10 @@ npm run preview
 - Відкрийте `http://127.0.0.1:<proxy>/index.html?store_bot_id=...`.
 - Для входу: спочатку magic link на цей же хост (`/store?t=...`), потім сайт.
 
+### Клієнтський домен (Cloudflare Worker тощо)
+
+Для публічного сайту на окремому домені (значення `store_bots.site_public_host`) проксі на Worker або іншому шарі має пересилати на **той самий хост**, що й `WEBHOOK_BASE_URL` (бекенд aiohttp): шляхи **`/api/*`**, а також **`/store`** і **`/store/`** (magic link і redirect після входу). Інакше посилання з Telegram Store bot (`https://<site_public_host>/store?t=...`) не потрапить на бекенд і сесія не виставиться на потрібному origin.
+
 ## Збірка
 
 Артефакт: `static/app.bundle.js` (esbuild, `esbuild.config.mjs`).
