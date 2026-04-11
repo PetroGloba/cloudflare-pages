@@ -910,19 +910,37 @@
       document.documentElement.removeAttribute("data-theme");
     }
   }
-  function applyStoreAppearanceFromMe(meLike) {
-    if (!meLike) return;
-    applyWidgetBaseTheme(meLike.widget_theme);
-    var t2 = meLike.widget_theme && String(meLike.widget_theme).toLowerCase().trim() || "dark";
+  function applyStoreAppearanceFromWidgetTheme(widgetTheme) {
+    applyWidgetBaseTheme(widgetTheme);
+    var t2 = widgetTheme && String(widgetTheme).toLowerCase().trim() || "dark";
     var byTheme = { dark: "blue", light: "black", red: "red", green: "green" };
     var accent = byTheme[t2] || "blue";
     applyThemeColor(accent);
   }
+  function applyStoreAppearanceFromMe(meLike) {
+    if (!meLike) return;
+    applyStoreAppearanceFromWidgetTheme(meLike.widget_theme);
+  }
   function guessLocale() {
-    var nav = (navigator.language || "uk").slice(0, 2).toLowerCase();
-    return LOCALES.some(function(L) {
-      return L.code === nav;
-    }) ? nav : "uk";
+    var candidates = [];
+    if (navigator.languages && navigator.languages.length) {
+      for (var i = 0; i < navigator.languages.length; i++) {
+        var raw = navigator.languages[i] || "";
+        var code = String(raw).split("-")[0].toLowerCase();
+        if (code) candidates.push(code);
+      }
+    } else {
+      var one = (navigator.language || "uk").split("-")[0].toLowerCase();
+      if (one) candidates.push(one);
+    }
+    for (var j = 0; j < candidates.length; j++) {
+      if (LOCALES.some(function(L) {
+        return L.code === candidates[j];
+      })) {
+        return candidates[j];
+      }
+    }
+    return "uk";
   }
   async function loadI18n(locale) {
     try {
@@ -1839,8 +1857,6 @@
       showScreen("screen-auth");
       return;
     }
-    showScreen("screen-auth");
-    document.getElementById("auth-msg").textContent = t("web.store_site.session_check");
     try {
       dlog("boot: POST /api/public/store-site/bootstrap");
       var br = await fetch(resolveApiPath("/api/public/store-site/bootstrap"), {
@@ -1864,6 +1880,13 @@
         showScreen("screen-auth");
         return;
       }
+      try {
+        var bootPayload = await br.json();
+        if (bootPayload && bootPayload.widget_theme) {
+          applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
+        }
+      } catch (_parse) {
+      }
     } catch (eB) {
       dlog("boot: bootstrap fetch failed", eB && eB.message ? eB.message : eB);
       rlog("boot_bootstrap_fetch_failed", eB && eB.message ? eB.message : String(eB));
@@ -1873,8 +1896,11 @@
       }
       var amx = document.getElementById("auth-msg");
       if (amx) amx.textContent = t("errors.generic");
+      showScreen("screen-auth");
       return;
     }
+    showScreen("screen-auth");
+    document.getElementById("auth-msg").textContent = t("web.store_site.session_check");
     var r;
     try {
       dlog("boot: fetching /api/store/me");
@@ -1884,31 +1910,53 @@
         rlog("boot_me_failed http=" + r.status);
         await loadI18n(PRE_LOCALE_UI);
         if (r.status === 401) {
-          document.getElementById("auth-msg").textContent = t("web.store_site.auth_magic_link_hint");
+          document.getElementById("auth-msg").textContent = t("web.store_site.session_unavailable");
         } else {
           document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
         }
         return;
       }
       var meData = await r.json();
+      applyStoreAppearanceFromMe(meData);
       var mustPickLanguage = meData.locale_saved === false;
       if (mustPickLanguage) {
         await loadI18n(PRE_LOCALE_UI);
-        var picked = await runInitialLanguagePicker();
-        if (!picked) return;
-        r = await apiFetch(API.me);
-        if (!r.ok) {
-          rlog("boot_me_retry_failed http=" + r.status);
-          await loadI18n(PRE_LOCALE_UI);
-          document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
-          return;
+        var guessed = guessLocale();
+        var localeOk = false;
+        try {
+          var lr = await apiFetch(API.locale, { method: "POST", json: { locale: guessed } });
+          localeOk = lr.ok;
+        } catch (errL) {
+          reportError("autoLocale", errL);
         }
-        meData = await r.json();
+        if (localeOk) {
+          await loadI18n(guessed);
+          r = await apiFetch(API.me);
+          if (!r.ok) {
+            rlog("boot_me_retry_failed http=" + r.status);
+            await loadI18n(PRE_LOCALE_UI);
+            document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
+            return;
+          }
+          meData = await r.json();
+          applyStoreAppearanceFromMe(meData);
+        } else {
+          var picked = await runInitialLanguagePicker();
+          if (!picked) return;
+          r = await apiFetch(API.me);
+          if (!r.ok) {
+            rlog("boot_me_retry_failed http=" + r.status);
+            await loadI18n(PRE_LOCALE_UI);
+            document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
+            return;
+          }
+          meData = await r.json();
+          applyStoreAppearanceFromMe(meData);
+        }
       }
       me = meData;
       var loc = me.locale || guessLocale();
       await loadI18n(loc);
-      applyStoreAppearanceFromMe(me);
       document.getElementById("appHeader").hidden = false;
       document.getElementById("bottomNav").hidden = false;
       var sn0 = document.getElementById("siteNavDesktop");

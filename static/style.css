@@ -21,6 +21,10 @@
   --bnav-h: 60px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
+  /* Header store title (gradient shimmer + glow); tuned per data-theme */
+  --hdr-title-stroke: color-mix(in srgb, var(--accent) 42%, transparent);
+  --hdr-title-shimmer-dur: 5.5s;
+  --hdr-title-glow-dur: 2.6s;
 }
 
 /* Light base theme (Element widget only; accent still from applyThemeColor) */
@@ -35,6 +39,9 @@
   --card-rim: inset 0 1px 0 rgba(0, 0, 0, 0.05);
   --shadow-card: var(--shadow-sm), var(--card-rim);
   --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --hdr-title-stroke: color-mix(in srgb, var(--accent) 22%, transparent);
+  --hdr-title-shimmer-dur: 6.5s;
+  --hdr-title-glow-dur: 3s;
 }
 
 :root[data-theme="light"] .btn-secondary {
@@ -70,6 +77,7 @@
   --card-rim: inset 0 1px 0 rgba(255, 230, 235, 0.12);
   --shadow-card: var(--shadow-sm), var(--card-rim);
   --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --hdr-title-shimmer-dur: 5s;
 }
 
 :root[data-theme="red"] .skeleton {
@@ -101,6 +109,7 @@
   --card-rim: inset 0 1px 0 rgba(210, 245, 225, 0.1);
   --shadow-card: var(--shadow-sm), var(--card-rim);
   --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.32);
+  --hdr-title-shimmer-dur: 5s;
 }
 
 :root[data-theme="green"] .skeleton {
@@ -164,56 +173,61 @@ body {
   box-sizing: border-box;
 }
 
-/* Header store title: fill matches --bg, animated accent glow (ellipsis-safe padding). */
-@keyframes hdr-title-smoke {
+/* Header store title: gradient fill + shimmer + pulsing accent glow (ellipsis-safe padding). */
+@keyframes hdr-title-shimmer {
   0%,
   100% {
-    text-shadow:
-      0 0 8px color-mix(in srgb, var(--accent) 72%, transparent),
-      0 0 16px color-mix(in srgb, var(--accent) 48%, transparent),
-      0 0 32px color-mix(in srgb, var(--accent) 32%, transparent),
-      0 0 56px color-mix(in srgb, var(--accent) 20%, transparent);
-  }
-  25%,
-  75% {
-    text-shadow:
-      0 0 9px color-mix(in srgb, var(--accent) 78%, transparent),
-      0 0 20px color-mix(in srgb, var(--accent) 55%, transparent),
-      0 0 38px color-mix(in srgb, var(--accent) 38%, transparent),
-      0 0 58px color-mix(in srgb, var(--accent) 26%, transparent);
+    background-position: 0% 50%;
   }
   50% {
-    text-shadow:
-      0 0 10px color-mix(in srgb, var(--accent) 88%, transparent),
-      0 0 24px color-mix(in srgb, var(--accent) 62%, transparent),
-      0 0 44px color-mix(in srgb, var(--accent) 45%, transparent),
-      0 0 60px color-mix(in srgb, var(--accent) 32%, transparent);
+    background-position: 100% 50%;
   }
 }
 
-@keyframes hdr-title-smoke-light {
+@keyframes hdr-title-glow {
   0%,
   100% {
     text-shadow:
-      0 0 6px color-mix(in srgb, var(--accent) 50%, transparent),
-      0 0 14px color-mix(in srgb, var(--accent) 34%, transparent),
-      0 0 26px color-mix(in srgb, var(--accent) 22%, transparent),
-      0 0 48px color-mix(in srgb, var(--accent) 14%, transparent);
+      0 0 6px color-mix(in srgb, var(--accent) 84%, transparent),
+      0 0 14px color-mix(in srgb, var(--accent) 70%, transparent),
+      0 0 26px color-mix(in srgb, var(--accent) 54%, transparent),
+      0 0 44px color-mix(in srgb, var(--accent) 40%, transparent),
+      0 0 68px color-mix(in srgb, var(--accent) 26%, transparent);
   }
   25%,
   75% {
     text-shadow:
-      0 0 7px color-mix(in srgb, var(--accent) 55%, transparent),
-      0 0 16px color-mix(in srgb, var(--accent) 40%, transparent),
-      0 0 30px color-mix(in srgb, var(--accent) 28%, transparent),
-      0 0 50px color-mix(in srgb, var(--accent) 18%, transparent);
+      0 0 8px color-mix(in srgb, var(--accent) 90%, transparent),
+      0 0 18px color-mix(in srgb, var(--accent) 76%, transparent),
+      0 0 34px color-mix(in srgb, var(--accent) 58%, transparent),
+      0 0 54px color-mix(in srgb, var(--accent) 42%, transparent),
+      0 0 76px color-mix(in srgb, var(--accent) 28%, transparent);
   }
   50% {
     text-shadow:
-      0 0 8px color-mix(in srgb, var(--accent) 62%, transparent),
-      0 0 18px color-mix(in srgb, var(--accent) 45%, transparent),
-      0 0 36px color-mix(in srgb, var(--accent) 32%, transparent),
-      0 0 52px color-mix(in srgb, var(--accent) 22%, transparent);
+      0 0 12px color-mix(in srgb, var(--accent) 98%, transparent),
+      0 0 26px color-mix(in srgb, var(--accent) 82%, transparent),
+      0 0 46px color-mix(in srgb, var(--accent) 62%, transparent),
+      0 0 72px color-mix(in srgb, var(--accent) 44%, transparent),
+      0 0 96px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+}
+
+@keyframes hdr-title-glow-light {
+  0%,
+  100% {
+    text-shadow:
+      0 0 4px color-mix(in srgb, var(--accent) 52%, transparent),
+      0 0 10px color-mix(in srgb, var(--accent) 38%, transparent),
+      0 0 20px color-mix(in srgb, var(--accent) 26%, transparent),
+      0 0 36px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  50% {
+    text-shadow:
+      0 0 7px color-mix(in srgb, var(--accent) 62%, transparent),
+      0 0 16px color-mix(in srgb, var(--accent) 46%, transparent),
+      0 0 30px color-mix(in srgb, var(--accent) 32%, transparent),
+      0 0 48px color-mix(in srgb, var(--accent) 20%, transparent);
   }
 }
 
@@ -232,12 +246,38 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--bg);
-  animation: hdr-title-smoke 2.4s ease-in-out infinite;
+  background-image: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--accent) 76%, var(--bg) 24%) 0%,
+    color-mix(in srgb, var(--accent) 92%, white 40%) 44%,
+    color-mix(in srgb, var(--accent) 88%, white 28%) 52%,
+    color-mix(in srgb, var(--accent) 76%, var(--bg) 24%) 100%
+  );
+  background-size: 260% 100%;
+  background-repeat: no-repeat;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.45px var(--hdr-title-stroke);
+  animation:
+    hdr-title-shimmer var(--hdr-title-shimmer-dur) ease-in-out infinite,
+    hdr-title-glow var(--hdr-title-glow-dur) ease-in-out infinite;
 }
 
 :root[data-theme="light"] .header-info .title {
-  animation-name: hdr-title-smoke-light;
+  background-image: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--accent) 68%, var(--text) 32%) 0%,
+    color-mix(in srgb, var(--accent) 82%, white 22%) 45%,
+    color-mix(in srgb, var(--accent) 78%, white 14%) 55%,
+    color-mix(in srgb, var(--accent) 68%, var(--text) 32%) 100%
+  );
+  background-size: 220% 100%;
+  animation:
+    hdr-title-shimmer var(--hdr-title-shimmer-dur) ease-in-out infinite,
+    hdr-title-glow-light var(--hdr-title-glow-dur) ease-in-out infinite;
 }
 
 .lang-picker {
@@ -1261,19 +1301,22 @@ a.contact-line {
     animation: none;
     background: var(--surface);
   }
-  /* Header title: static glow only (between calm and mid keyframe of hdr-title-smoke). */
+  /* Header title: no motion; static gradient center + moderate glow */
   .header-info .title {
     animation: none;
+    background-size: 100% 100%;
+    background-position: 50% 50%;
     text-shadow:
-      0 0 9px color-mix(in srgb, var(--accent) 76%, transparent),
-      0 0 20px color-mix(in srgb, var(--accent) 52%, transparent),
-      0 0 40px color-mix(in srgb, var(--accent) 34%, transparent);
+      0 0 8px color-mix(in srgb, var(--accent) 88%, transparent),
+      0 0 18px color-mix(in srgb, var(--accent) 72%, transparent),
+      0 0 34px color-mix(in srgb, var(--accent) 52%, transparent),
+      0 0 54px color-mix(in srgb, var(--accent) 36%, transparent);
   }
   :root[data-theme="light"] .header-info .title {
     text-shadow:
-      0 0 7px color-mix(in srgb, var(--accent) 52%, transparent),
-      0 0 16px color-mix(in srgb, var(--accent) 36%, transparent),
-      0 0 32px color-mix(in srgb, var(--accent) 24%, transparent);
+      0 0 5px color-mix(in srgb, var(--accent) 56%, transparent),
+      0 0 12px color-mix(in srgb, var(--accent) 42%, transparent),
+      0 0 24px color-mix(in srgb, var(--accent) 28%, transparent);
   }
   .btn-grid button:active,
   .pos-card:active,

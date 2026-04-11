@@ -6,7 +6,7 @@
 
 ## Що змінилось (site-shell)
 
-- Немає Matrix `WidgetApi` / OpenID handshake; вхід через **cookie-сесію** після **magic link** (`GET /store?t=...` на тому ж origin, що й API).
+- Немає Matrix `WidgetApi` / OpenID handshake; сесія — **cookie** після **`POST /api/public/store-site/bootstrap`** на тому ж origin, що й API (гостьовий веб-користувач).
 - **API base:** `resolveApiPath()` — `location.origin`, або `window.__STORE_API_ORIGIN__`, або змінна середовища **`STORE_API_ORIGIN`** / `VITE_STORE_API_ORIGIN` на етапі `npm run build` (див. `esbuild.config.mjs`).
 - Тенант: **`?store_bot_id=`** або **`GET /api/public/store-by-host?host=`** (поле `store_bots.site_public_host` у БД після міграції).
 - Таби: магазин, промо, відгуки, **контакти** (`GET /api/store/site-contacts`); без topup/account на сайті.
@@ -39,12 +39,11 @@ npm run preview
 Щоб cookie `matrix_store_session` і `credentials: include` працювали без CORS-мук:
 
 - Проксі: `/` → корінь `web/store_site` (зібраний `index.html` + `static/`), `/api/` → `run_webhook`.
-- Відкрийте `http://127.0.0.1:<proxy>/index.html?store_bot_id=...`.
-- Для входу: спочатку magic link на цей же хост (`/store?t=...`), потім сайт.
+- Відкрийте `http://127.0.0.1:<proxy>/index.html?store_bot_id=...`. Після завантаження сторінки bootstrap виставить cookie.
 
 ### Клієнтський домен (Cloudflare Worker тощо)
 
-Для публічного сайту на окремому домені (значення `store_bots.site_public_host`) проксі на Worker або іншому шарі має пересилати на **той самий хост**, що й `WEBHOOK_BASE_URL` (бекенд aiohttp): шляхи **`/api/*`**, а також **`/store`** і **`/store/`** (magic link і redirect після входу). Інакше посилання з Telegram Store bot (`https://<site_public_host>/store?t=...`) не потрапить на бекенд і сесія не виставиться на потрібному origin.
+Для публічного сайту на окремому домені (значення `store_bots.site_public_host`) проксі на Worker або іншому шарі має пересилати на **той самий хост**, що й `WEBHOOK_BASE_URL` (бекенд aiohttp): шляхи **`/api/*`** та статику сайту (`/`, `/index.html`, `/static/...`). Інакше `POST /api/public/store-site/bootstrap` і подальші **`/api/store/*`** не зможуть виставити сесію на потрібному origin.
 
 ## Збірка
 
