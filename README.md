@@ -11,6 +11,7 @@
 - Тенант: **`?store_bot_id=`** або **`GET /api/public/store-by-host?host=`** (поле `store_bots.site_public_host` у БД після міграції).
 - Таби: магазин, промо, відгуки, **контакти** (`GET /api/store/site-contacts`); без topup/account на сайті.
 - **Десктоп (від ~48rem):** основна навігація під хедером, нижній таб-бар приховано; ширший контейнер і сітки для міст, позицій і районів — див. `static/style.css`.
+- **Favicon:** у каталозі `static/` чотири файли `favicon-dark.png`, `favicon-light.png`, `favicon-red.png`, `favicon-green.png` — відповідають `widget_theme` магазину; перемикання в `store-app.js` після bootstrap/`/me`.
 
 ## Локальний перегляд статики
 

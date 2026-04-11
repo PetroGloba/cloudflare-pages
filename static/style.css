@@ -29,6 +29,10 @@
   --hdr-aura-pulse-dur: 4.2s;
   --hdr-aura-opacity-min: 0.5;
   --hdr-aura-opacity-max: 0.78;
+  /* Rotating conic border around store title (.hdr-title-frame) */
+  --hdr-title-frame-r: 12px;
+  --hdr-border-w: 2px;
+  --hdr-border-spin-dur: 12s;
 }
 
 /* Light base theme (Element widget only; accent still from applyThemeColor) */
@@ -50,6 +54,8 @@
   --hdr-aura-pulse-dur: 5s;
   --hdr-aura-opacity-min: 0.28;
   --hdr-aura-opacity-max: 0.44;
+  --hdr-border-w: 1.5px;
+  --hdr-border-spin-dur: 14s;
 }
 
 :root[data-theme="light"] .btn-secondary {
@@ -89,6 +95,7 @@
   --hdr-aura-mid: 48%;
   --hdr-aura-opacity-min: 0.52;
   --hdr-aura-opacity-max: 0.82;
+  --hdr-border-spin-dur: 11s;
 }
 
 :root[data-theme="red"] .skeleton {
@@ -124,6 +131,7 @@
   --hdr-aura-mid: 46%;
   --hdr-aura-opacity-min: 0.5;
   --hdr-aura-opacity-max: 0.8;
+  --hdr-border-spin-dur: 11s;
 }
 
 :root[data-theme="green"] .skeleton {
@@ -209,6 +217,15 @@ body {
   }
 }
 
+@keyframes hdr-border-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
 .header-info {
   flex: 1;
   min-width: 0;
@@ -218,6 +235,46 @@ body {
   align-items: center;
   position: relative;
   isolation: isolate;
+}
+
+/* Rotating conic-gradient border; inner mask uses --bg so only a ring shows. */
+.hdr-title-frame {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+  border-radius: var(--hdr-title-frame-r);
+  overflow: hidden;
+}
+
+.hdr-title-frame::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 50%;
+  width: 220%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--accent) 78%, transparent),
+    color-mix(in srgb, var(--accent) 18%, transparent),
+    transparent 28%,
+    color-mix(in srgb, var(--accent) 58%, transparent),
+    color-mix(in srgb, var(--accent) 88%, white 14%),
+    color-mix(in srgb, var(--accent) 78%, transparent)
+  );
+  animation: hdr-border-spin var(--hdr-border-spin-dur) linear infinite;
+}
+
+.hdr-title-frame__inner {
+  position: relative;
+  z-index: 1;
+  margin: var(--hdr-border-w);
+  background: var(--bg);
+  border-radius: calc(var(--hdr-title-frame-r) - var(--hdr-border-w));
+  min-width: 0;
 }
 
 /* Radial accent wash behind the title column; spans full .header-row--top height. Blur is one layer (acceptable cost). */
@@ -238,10 +295,20 @@ body {
   animation: hdr-aura-pulse var(--hdr-aura-pulse-dur) ease-in-out infinite;
 }
 
+:root[data-theme="light"] .hdr-title-frame::before {
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--accent) 48%, transparent),
+    color-mix(in srgb, var(--accent) 12%, transparent),
+    transparent 32%,
+    color-mix(in srgb, var(--accent) 35%, transparent),
+    color-mix(in srgb, var(--accent) 55%, var(--text) 18%),
+    color-mix(in srgb, var(--accent) 48%, transparent)
+  );
+}
+
 .header-info .title {
   position: relative;
-  z-index: 1;
-  flex: 1;
   min-width: 0;
   font-size: 1rem;
   font-weight: 600;
@@ -1305,6 +1372,10 @@ a.contact-line {
   .header-info::before {
     animation: none;
     opacity: var(--hdr-aura-opacity-max);
+  }
+  .hdr-title-frame::before {
+    animation: none;
+    transform: translate(-50%, -50%) rotate(0deg);
   }
   .header-info .title {
     animation: none;

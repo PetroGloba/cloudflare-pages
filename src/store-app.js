@@ -794,6 +794,28 @@ import { rlog } from "./app/remoteLog.js";
     }
   }
 
+  /** PNGs in web/store_site/static/: favicon-{dark|light|red|green}.png */
+  var FAVICON_VERSION = "storesite7";
+
+  function applyFaviconForWidgetTheme(widgetTheme) {
+    var t = (widgetTheme && String(widgetTheme).toLowerCase().trim()) || "dark";
+    if (t !== "light" && t !== "red" && t !== "green") {
+      t = "dark";
+    }
+    var href = "static/favicon-" + t + ".png?v=" + FAVICON_VERSION;
+    var link = document.getElementById("store-site-favicon");
+    if (!link) {
+      link = document.createElement("link");
+      link.id = "store-site-favicon";
+      link.rel = "icon";
+      link.type = "image/png";
+      document.head.appendChild(link);
+    }
+    if (link.getAttribute("href") !== href) {
+      link.setAttribute("href", href);
+    }
+  }
+
   /** Accent follows widget_theme; same mapping as backend / bootstrap. */
   function applyStoreAppearanceFromWidgetTheme(widgetTheme) {
     applyWidgetBaseTheme(widgetTheme);
@@ -801,12 +823,28 @@ import { rlog } from "./app/remoteLog.js";
     var byTheme = { dark: "blue", light: "black", red: "red", green: "green" };
     var accent = byTheme[t] || "blue";
     applyThemeColor(accent);
+    applyFaviconForWidgetTheme(widgetTheme);
   }
 
   /** Align theme + accent with /api/store/me (accent follows widget_theme; same as backend). */
   function applyStoreAppearanceFromMe(meLike) {
     if (!meLike) return;
     applyStoreAppearanceFromWidgetTheme(meLike.widget_theme);
+  }
+
+  /** Tab + header title: trimmed store name or i18n fallback (same as former #hdr-title only). */
+  function effectiveStoreDisplayTitle(meLike) {
+    if (!meLike) return t("web.store.title");
+    var raw = meLike.store_name;
+    var n = raw != null && raw !== "" ? String(raw).trim() : "";
+    return n || t("web.store.title");
+  }
+
+  function applyStoreShellTitle(meLike) {
+    var title = effectiveStoreDisplayTitle(meLike);
+    document.title = title;
+    var hdr = document.getElementById("hdr-title");
+    if (hdr) hdr.textContent = title;
   }
 
   function guessLocale() {
@@ -1853,6 +1891,7 @@ import { rlog } from "./app/remoteLog.js";
       if (r.ok) {
         me = await r.json();
         applyStoreAppearanceFromMe(me);
+        applyStoreShellTitle(me);
         refreshLabels();
       }
     } catch (_) { /* ignore */ }
@@ -1938,6 +1977,10 @@ import { rlog } from "./app/remoteLog.js";
         if (bootPayload && bootPayload.widget_theme) {
           applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
         }
+        if (bootPayload && bootPayload.store_name) {
+          var bn = String(bootPayload.store_name).trim();
+          if (bn) document.title = bn;
+        }
       } catch (_parse) { /* ignore malformed bootstrap body */ }
     } catch (eB) {
       dlog("boot: bootstrap fetch failed", eB && eB.message ? eB.message : eB);
@@ -2015,7 +2058,7 @@ import { rlog } from "./app/remoteLog.js";
       document.getElementById("bottomNav").hidden = false;
       var sn0 = document.getElementById("siteNavDesktop");
       if (sn0) sn0.hidden = false;
-      document.getElementById("hdr-title").textContent = me.store_name || t("web.store.title");
+      applyStoreShellTitle(me);
       fillLocaleSelect(loc);
       refreshLabels();
 

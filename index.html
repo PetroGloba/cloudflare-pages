@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Store site</title>
-  <link rel="stylesheet" href="static/style.css?v=storesite6" />
+  <link rel="icon" type="image/png" href="static/favicon-dark.png?v=storesite7" id="store-site-favicon" />
+  <link rel="stylesheet" href="static/style.css?v=storesite7" />
 </head>
 <body>
   <div id="app" class="app">
@@ -12,7 +13,11 @@
     <header class="app-header" id="appHeader" hidden>
       <div class="header-row header-row--top">
         <div class="header-info">
-          <h1 class="title" id="hdr-title"></h1>
+          <div class="hdr-title-frame">
+            <div class="hdr-title-frame__inner">
+              <h1 class="title" id="hdr-title"></h1>
+            </div>
+          </div>
         </div>
         <nav class="site-nav-desktop" id="siteNavDesktop" hidden role="navigation" aria-label="Primary">
           <button type="button" class="bnav-btn is-active" data-tab="shop">

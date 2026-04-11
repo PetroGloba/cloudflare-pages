@@ -910,16 +910,48 @@
       document.documentElement.removeAttribute("data-theme");
     }
   }
+  var FAVICON_VERSION = "storesite7";
+  function applyFaviconForWidgetTheme(widgetTheme) {
+    var t2 = widgetTheme && String(widgetTheme).toLowerCase().trim() || "dark";
+    if (t2 !== "light" && t2 !== "red" && t2 !== "green") {
+      t2 = "dark";
+    }
+    var href = "static/favicon-" + t2 + ".png?v=" + FAVICON_VERSION;
+    var link = document.getElementById("store-site-favicon");
+    if (!link) {
+      link = document.createElement("link");
+      link.id = "store-site-favicon";
+      link.rel = "icon";
+      link.type = "image/png";
+      document.head.appendChild(link);
+    }
+    if (link.getAttribute("href") !== href) {
+      link.setAttribute("href", href);
+    }
+  }
   function applyStoreAppearanceFromWidgetTheme(widgetTheme) {
     applyWidgetBaseTheme(widgetTheme);
     var t2 = widgetTheme && String(widgetTheme).toLowerCase().trim() || "dark";
     var byTheme = { dark: "blue", light: "black", red: "red", green: "green" };
     var accent = byTheme[t2] || "blue";
     applyThemeColor(accent);
+    applyFaviconForWidgetTheme(widgetTheme);
   }
   function applyStoreAppearanceFromMe(meLike) {
     if (!meLike) return;
     applyStoreAppearanceFromWidgetTheme(meLike.widget_theme);
+  }
+  function effectiveStoreDisplayTitle(meLike) {
+    if (!meLike) return t("web.store.title");
+    var raw = meLike.store_name;
+    var n = raw != null && raw !== "" ? String(raw).trim() : "";
+    return n || t("web.store.title");
+  }
+  function applyStoreShellTitle(meLike) {
+    var title = effectiveStoreDisplayTitle(meLike);
+    document.title = title;
+    var hdr = document.getElementById("hdr-title");
+    if (hdr) hdr.textContent = title;
   }
   function guessLocale() {
     var candidates = [];
@@ -1809,6 +1841,7 @@
       if (r.ok) {
         me = await r.json();
         applyStoreAppearanceFromMe(me);
+        applyStoreShellTitle(me);
         refreshLabels();
       }
     } catch (_) {
@@ -1884,6 +1917,10 @@
         var bootPayload = await br.json();
         if (bootPayload && bootPayload.widget_theme) {
           applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
+        }
+        if (bootPayload && bootPayload.store_name) {
+          var bn = String(bootPayload.store_name).trim();
+          if (bn) document.title = bn;
         }
       } catch (_parse) {
       }
@@ -1961,7 +1998,7 @@
       document.getElementById("bottomNav").hidden = false;
       var sn0 = document.getElementById("siteNavDesktop");
       if (sn0) sn0.hidden = false;
-      document.getElementById("hdr-title").textContent = me.store_name || t("web.store.title");
+      applyStoreShellTitle(me);
       fillLocaleSelect(loc);
       refreshLabels();
       wireGoBackAndBottomNav();
