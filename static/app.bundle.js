@@ -929,6 +929,37 @@
       link.setAttribute("href", href);
     }
   }
+  var STORE_SITE_APPEARANCE_KEY = "storeSiteAppearanceV1";
+  function readStoreAppearanceCache(storeBotId) {
+    if (storeBotId < 1 || typeof sessionStorage === "undefined") return null;
+    try {
+      var raw = sessionStorage.getItem(STORE_SITE_APPEARANCE_KEY);
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      if (!o || parseInt(String(o.store_bot_id || "0"), 10) !== storeBotId) {
+        return null;
+      }
+      var wt = o.widget_theme;
+      if (!wt || typeof wt !== "string") return null;
+      return wt;
+    } catch (_e) {
+      return null;
+    }
+  }
+  function persistStoreAppearanceCache(storeBotId, widgetTheme) {
+    if (storeBotId < 1 || typeof sessionStorage === "undefined") return;
+    if (!widgetTheme || typeof widgetTheme !== "string") return;
+    try {
+      sessionStorage.setItem(
+        STORE_SITE_APPEARANCE_KEY,
+        JSON.stringify({
+          store_bot_id: storeBotId,
+          widget_theme: String(widgetTheme).trim() || "dark"
+        })
+      );
+    } catch (_e) {
+    }
+  }
   function applyStoreAppearanceFromWidgetTheme(widgetTheme) {
     applyWidgetBaseTheme(widgetTheme);
     var t2 = widgetTheme && String(widgetTheme).toLowerCase().trim() || "dark";
@@ -940,6 +971,10 @@
   function applyStoreAppearanceFromMe(meLike) {
     if (!meLike) return;
     applyStoreAppearanceFromWidgetTheme(meLike.widget_theme);
+    var sid0 = parseInt(String(meLike.store_bot_id || "0"), 10);
+    if (sid0 >= 1 && meLike.widget_theme) {
+      persistStoreAppearanceCache(sid0, meLike.widget_theme);
+    }
   }
   function effectiveStoreDisplayTitle(meLike) {
     if (!meLike) return t("web.store.title");
@@ -1882,29 +1917,48 @@
       });
     });
   }
+  async function fetchStoreSiteBootstrap(sid) {
+    var r = await fetch(resolveApiPath("/api/public/store-site/bootstrap"), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ store_bot_id: sid })
+    });
+    if (!r.ok) {
+      return { ok: false, status: r.status, payload: null };
+    }
+    try {
+      var payload = await r.json();
+      return { ok: true, status: r.status, payload };
+    } catch (_parse) {
+      return { ok: false, status: r.status, payload: null };
+    }
+  }
   async function boot() {
-    await loadI18n(PRE_LOCALE_UI);
     var sid = await resolveStoreBotIdEarly();
     if (sid < 1) {
+      await loadI18n(PRE_LOCALE_UI);
       document.getElementById("auth-msg").textContent = t("web.store_site.need_store_context");
       showScreen("screen-auth");
       return;
     }
+    var cachedWT = readStoreAppearanceCache(sid);
+    if (cachedWT) {
+      applyStoreAppearanceFromWidgetTheme(cachedWT);
+    }
     try {
-      dlog("boot: POST /api/public/store-site/bootstrap");
-      var br = await fetch(resolveApiPath("/api/public/store-site/bootstrap"), {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ store_bot_id: sid })
-      });
-      if (!br.ok) {
-        dlog("boot: bootstrap http status=" + br.status);
-        rlog("boot_bootstrap_failed http=" + br.status);
-        await loadI18n(PRE_LOCALE_UI);
+      dlog("boot: parallel loadI18n + POST /api/public/store-site/bootstrap");
+      var parallel = await Promise.all([
+        loadI18n(PRE_LOCALE_UI),
+        fetchStoreSiteBootstrap(sid)
+      ]);
+      var bootWrap = parallel[1];
+      if (!bootWrap.ok) {
+        dlog("boot: bootstrap http status=" + bootWrap.status);
+        rlog("boot_bootstrap_failed http=" + bootWrap.status);
         var amB = document.getElementById("auth-msg");
         if (amB) {
-          if (br.status === 404 || br.status === 403) {
+          if (bootWrap.status === 404 || bootWrap.status === 403) {
             amB.textContent = t("web.store_site.need_store_context");
           } else {
             amB.textContent = t("errors.generic");
@@ -1913,16 +1967,14 @@
         showScreen("screen-auth");
         return;
       }
-      try {
-        var bootPayload = await br.json();
-        if (bootPayload && bootPayload.widget_theme) {
-          applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
-        }
-        if (bootPayload && bootPayload.store_name) {
-          var bn = String(bootPayload.store_name).trim();
-          if (bn) document.title = bn;
-        }
-      } catch (_parse) {
+      var bootPayload = bootWrap.payload;
+      if (bootPayload && bootPayload.widget_theme) {
+        applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
+        persistStoreAppearanceCache(sid, bootPayload.widget_theme);
+      }
+      if (bootPayload && bootPayload.store_name) {
+        var bn = String(bootPayload.store_name).trim();
+        if (bn) document.title = bn;
       }
     } catch (eB) {
       dlog("boot: bootstrap fetch failed", eB && eB.message ? eB.message : eB);

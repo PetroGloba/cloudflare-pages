@@ -239,7 +239,8 @@ body {
 
 /* Rotating conic-gradient border; inner mask uses --bg so only a ring shows. */
 .hdr-title-frame {
-  flex: 1;
+  flex: 0 1 auto;
+  max-width: 100%;
   min-width: 0;
   position: relative;
   z-index: 1;
