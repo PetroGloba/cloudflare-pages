@@ -21,10 +21,14 @@
   --bnav-h: 60px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
-  /* Header store title (gradient shimmer + glow); tuned per data-theme */
+  /* Header store title: gradient shimmer on h1; full-height aura on .header-info::before */
   --hdr-title-stroke: color-mix(in srgb, var(--accent) 42%, transparent);
   --hdr-title-shimmer-dur: 5.5s;
-  --hdr-title-glow-dur: 2.6s;
+  --hdr-aura-mid: 44%;
+  --hdr-aura-blur: 16px;
+  --hdr-aura-pulse-dur: 4.2s;
+  --hdr-aura-opacity-min: 0.5;
+  --hdr-aura-opacity-max: 0.78;
 }
 
 /* Light base theme (Element widget only; accent still from applyThemeColor) */
@@ -41,7 +45,11 @@
   --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.08);
   --hdr-title-stroke: color-mix(in srgb, var(--accent) 22%, transparent);
   --hdr-title-shimmer-dur: 6.5s;
-  --hdr-title-glow-dur: 3s;
+  --hdr-aura-mid: 26%;
+  --hdr-aura-blur: 12px;
+  --hdr-aura-pulse-dur: 5s;
+  --hdr-aura-opacity-min: 0.28;
+  --hdr-aura-opacity-max: 0.44;
 }
 
 :root[data-theme="light"] .btn-secondary {
@@ -78,6 +86,9 @@
   --shadow-card: var(--shadow-sm), var(--card-rim);
   --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.35);
   --hdr-title-shimmer-dur: 5s;
+  --hdr-aura-mid: 48%;
+  --hdr-aura-opacity-min: 0.52;
+  --hdr-aura-opacity-max: 0.82;
 }
 
 :root[data-theme="red"] .skeleton {
@@ -110,6 +121,9 @@
   --shadow-card: var(--shadow-sm), var(--card-rim);
   --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.32);
   --hdr-title-shimmer-dur: 5s;
+  --hdr-aura-mid: 46%;
+  --hdr-aura-opacity-min: 0.5;
+  --hdr-aura-opacity-max: 0.8;
 }
 
 :root[data-theme="green"] .skeleton {
@@ -173,7 +187,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Header store title: gradient fill + shimmer + pulsing accent glow (ellipsis-safe padding). */
+/* Header store title: h1 = gradient + shimmer only (no huge text-shadow — avoids clip with ellipsis). */
 @keyframes hdr-title-shimmer {
   0%,
   100% {
@@ -184,50 +198,14 @@ body {
   }
 }
 
-@keyframes hdr-title-glow {
+/* Soft pulse on the full-height aura layer (not on text-shadow). */
+@keyframes hdr-aura-pulse {
   0%,
   100% {
-    text-shadow:
-      0 0 6px color-mix(in srgb, var(--accent) 84%, transparent),
-      0 0 14px color-mix(in srgb, var(--accent) 70%, transparent),
-      0 0 26px color-mix(in srgb, var(--accent) 54%, transparent),
-      0 0 44px color-mix(in srgb, var(--accent) 40%, transparent),
-      0 0 68px color-mix(in srgb, var(--accent) 26%, transparent);
-  }
-  25%,
-  75% {
-    text-shadow:
-      0 0 8px color-mix(in srgb, var(--accent) 90%, transparent),
-      0 0 18px color-mix(in srgb, var(--accent) 76%, transparent),
-      0 0 34px color-mix(in srgb, var(--accent) 58%, transparent),
-      0 0 54px color-mix(in srgb, var(--accent) 42%, transparent),
-      0 0 76px color-mix(in srgb, var(--accent) 28%, transparent);
+    opacity: var(--hdr-aura-opacity-min);
   }
   50% {
-    text-shadow:
-      0 0 12px color-mix(in srgb, var(--accent) 98%, transparent),
-      0 0 26px color-mix(in srgb, var(--accent) 82%, transparent),
-      0 0 46px color-mix(in srgb, var(--accent) 62%, transparent),
-      0 0 72px color-mix(in srgb, var(--accent) 44%, transparent),
-      0 0 96px color-mix(in srgb, var(--accent) 30%, transparent);
-  }
-}
-
-@keyframes hdr-title-glow-light {
-  0%,
-  100% {
-    text-shadow:
-      0 0 4px color-mix(in srgb, var(--accent) 52%, transparent),
-      0 0 10px color-mix(in srgb, var(--accent) 38%, transparent),
-      0 0 20px color-mix(in srgb, var(--accent) 26%, transparent),
-      0 0 36px color-mix(in srgb, var(--accent) 16%, transparent);
-  }
-  50% {
-    text-shadow:
-      0 0 7px color-mix(in srgb, var(--accent) 62%, transparent),
-      0 0 16px color-mix(in srgb, var(--accent) 46%, transparent),
-      0 0 30px color-mix(in srgb, var(--accent) 32%, transparent),
-      0 0 48px color-mix(in srgb, var(--accent) 20%, transparent);
+    opacity: var(--hdr-aura-opacity-max);
   }
 }
 
@@ -235,9 +213,36 @@ body {
   flex: 1;
   min-width: 0;
   overflow: visible;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Radial accent wash behind the title column; spans full .header-row--top height. Blur is one layer (acceptable cost). */
+.header-info::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 12px;
+  background: radial-gradient(
+    ellipse 115% 165% at 8% 50%,
+    color-mix(in srgb, var(--accent) var(--hdr-aura-mid), transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(var(--hdr-aura-blur));
+  transform: translateZ(0);
+  animation: hdr-aura-pulse var(--hdr-aura-pulse-dur) ease-in-out infinite;
 }
 
 .header-info .title {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
   font-size: 1rem;
   font-weight: 600;
   margin: 0;
@@ -261,9 +266,7 @@ body {
   color: transparent;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0.45px var(--hdr-title-stroke);
-  animation:
-    hdr-title-shimmer var(--hdr-title-shimmer-dur) ease-in-out infinite,
-    hdr-title-glow var(--hdr-title-glow-dur) ease-in-out infinite;
+  animation: hdr-title-shimmer var(--hdr-title-shimmer-dur) ease-in-out infinite;
 }
 
 :root[data-theme="light"] .header-info .title {
@@ -275,9 +278,6 @@ body {
     color-mix(in srgb, var(--accent) 68%, var(--text) 32%) 100%
   );
   background-size: 220% 100%;
-  animation:
-    hdr-title-shimmer var(--hdr-title-shimmer-dur) ease-in-out infinite,
-    hdr-title-glow-light var(--hdr-title-glow-dur) ease-in-out infinite;
 }
 
 .lang-picker {
@@ -1301,22 +1301,15 @@ a.contact-line {
     animation: none;
     background: var(--surface);
   }
-  /* Header title: no motion; static gradient center + moderate glow */
+  /* Header title: static gradient; aura static (no pulse/shimmer). */
+  .header-info::before {
+    animation: none;
+    opacity: var(--hdr-aura-opacity-max);
+  }
   .header-info .title {
     animation: none;
     background-size: 100% 100%;
     background-position: 50% 50%;
-    text-shadow:
-      0 0 8px color-mix(in srgb, var(--accent) 88%, transparent),
-      0 0 18px color-mix(in srgb, var(--accent) 72%, transparent),
-      0 0 34px color-mix(in srgb, var(--accent) 52%, transparent),
-      0 0 54px color-mix(in srgb, var(--accent) 36%, transparent);
-  }
-  :root[data-theme="light"] .header-info .title {
-    text-shadow:
-      0 0 5px color-mix(in srgb, var(--accent) 56%, transparent),
-      0 0 12px color-mix(in srgb, var(--accent) 42%, transparent),
-      0 0 24px color-mix(in srgb, var(--accent) 28%, transparent);
   }
   .btn-grid button:active,
   .pos-card:active,
