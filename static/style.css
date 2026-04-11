@@ -169,15 +169,25 @@ body {
   0%,
   100% {
     text-shadow:
-      0 0 6px color-mix(in srgb, var(--accent) 55%, transparent),
-      0 0 14px color-mix(in srgb, var(--accent) 35%, transparent),
-      0 0 28px color-mix(in srgb, var(--accent) 18%, transparent);
+      0 0 8px color-mix(in srgb, var(--accent) 72%, transparent),
+      0 0 16px color-mix(in srgb, var(--accent) 48%, transparent),
+      0 0 32px color-mix(in srgb, var(--accent) 32%, transparent),
+      0 0 56px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  25%,
+  75% {
+    text-shadow:
+      0 0 9px color-mix(in srgb, var(--accent) 78%, transparent),
+      0 0 20px color-mix(in srgb, var(--accent) 55%, transparent),
+      0 0 38px color-mix(in srgb, var(--accent) 38%, transparent),
+      0 0 58px color-mix(in srgb, var(--accent) 26%, transparent);
   }
   50% {
     text-shadow:
-      0 0 10px color-mix(in srgb, var(--accent) 72%, transparent),
-      0 0 22px color-mix(in srgb, var(--accent) 48%, transparent),
-      0 0 42px color-mix(in srgb, var(--accent) 28%, transparent);
+      0 0 10px color-mix(in srgb, var(--accent) 88%, transparent),
+      0 0 24px color-mix(in srgb, var(--accent) 62%, transparent),
+      0 0 44px color-mix(in srgb, var(--accent) 45%, transparent),
+      0 0 60px color-mix(in srgb, var(--accent) 32%, transparent);
   }
 }
 
@@ -185,15 +195,25 @@ body {
   0%,
   100% {
     text-shadow:
-      0 0 5px color-mix(in srgb, var(--accent) 38%, transparent),
-      0 0 12px color-mix(in srgb, var(--accent) 22%, transparent),
-      0 0 22px color-mix(in srgb, var(--accent) 12%, transparent);
+      0 0 6px color-mix(in srgb, var(--accent) 50%, transparent),
+      0 0 14px color-mix(in srgb, var(--accent) 34%, transparent),
+      0 0 26px color-mix(in srgb, var(--accent) 22%, transparent),
+      0 0 48px color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  25%,
+  75% {
+    text-shadow:
+      0 0 7px color-mix(in srgb, var(--accent) 55%, transparent),
+      0 0 16px color-mix(in srgb, var(--accent) 40%, transparent),
+      0 0 30px color-mix(in srgb, var(--accent) 28%, transparent),
+      0 0 50px color-mix(in srgb, var(--accent) 18%, transparent);
   }
   50% {
     text-shadow:
-      0 0 8px color-mix(in srgb, var(--accent) 50%, transparent),
-      0 0 18px color-mix(in srgb, var(--accent) 30%, transparent),
-      0 0 32px color-mix(in srgb, var(--accent) 16%, transparent);
+      0 0 8px color-mix(in srgb, var(--accent) 62%, transparent),
+      0 0 18px color-mix(in srgb, var(--accent) 45%, transparent),
+      0 0 36px color-mix(in srgb, var(--accent) 32%, transparent),
+      0 0 52px color-mix(in srgb, var(--accent) 22%, transparent);
   }
 }
 
@@ -207,13 +227,13 @@ body {
   font-size: 1rem;
   font-weight: 600;
   margin: 0;
-  padding-inline: 0.5rem;
-  padding-block: 0.3rem;
+  padding-inline: 0.7rem;
+  padding-block: 0.38rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--bg);
-  animation: hdr-title-smoke 3.5s ease-in-out infinite;
+  animation: hdr-title-smoke 2.4s ease-in-out infinite;
 }
 
 :root[data-theme="light"] .header-info .title {
@@ -1241,17 +1261,19 @@ a.contact-line {
     animation: none;
     background: var(--surface);
   }
-  /* Header title: static glow only (see hdr-title-smoke keyframes above). */
+  /* Header title: static glow only (between calm and mid keyframe of hdr-title-smoke). */
   .header-info .title {
     animation: none;
     text-shadow:
-      0 0 8px color-mix(in srgb, var(--accent) 52%, transparent),
-      0 0 18px color-mix(in srgb, var(--accent) 30%, transparent);
+      0 0 9px color-mix(in srgb, var(--accent) 76%, transparent),
+      0 0 20px color-mix(in srgb, var(--accent) 52%, transparent),
+      0 0 40px color-mix(in srgb, var(--accent) 34%, transparent);
   }
   :root[data-theme="light"] .header-info .title {
     text-shadow:
-      0 0 6px color-mix(in srgb, var(--accent) 36%, transparent),
-      0 0 14px color-mix(in srgb, var(--accent) 20%, transparent);
+      0 0 7px color-mix(in srgb, var(--accent) 52%, transparent),
+      0 0 16px color-mix(in srgb, var(--accent) 36%, transparent),
+      0 0 32px color-mix(in srgb, var(--accent) 24%, transparent);
   }
   .btn-grid button:active,
   .pos-card:active,
