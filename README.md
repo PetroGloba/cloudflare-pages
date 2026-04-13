@@ -50,8 +50,25 @@ npm run preview
 
 Артефакт: `static/app.bundle.js` (esbuild, `esbuild.config.mjs`).
 
+### Cloudflare Pages (клієнтський домен = API на тому ж хості)
+
+Для продакшену, коли браузер звертається до **`https://shop.example.com`** і Worker проксує **`/api/*`** на бекенд на тому ж видимому хості, **не задавайте** у змінних середовища збірки **`STORE_API_ORIGIN`** / **`VITE_STORE_API_ORIGIN`**. Тоді в бандлі лишається порожній базовий URL і `resolveApiPath()` використовує **`location.origin`** — без зайвого хоста API у статичному JS і без роз’їзду cookie/session.
+
+Внутрішні або staging URL не варто прошивати в білд, який деплоїть на публічні домени клієнтів. Локально для розділених портів можна виставити **`window.__STORE_API_ORIGIN__`** (див. вище) або один reverse proxy.
+
+### Заголовки безпеки (CSP)
+
+Файл [**`_headers`**](_headers) застосовується Cloudflare Pages до видачі статики (CSP, `frame-ancestors 'none'`, `Referrer-Policy` тощо). Якщо в консолі браузера з’являються порушення CSP (наприклад, зовнішні шрифти або картинки), розширте відповідну директиву в `_headers`. Дублювати ті самі заголовки можна правилами **Transform Rules** у Cloudflare для зони домену.
+
 ## Тести фронту
 
 ```bash
 npm test
 ```
+
+## Безпека (коротко)
+
+- **`GET /api/public/store-by-host`** обмежений за IP (налаштування `rate_limit_store_by_host_per_minute` у бекенді).
+- **`GET /api/store/custom-buttons`** і **`GET /api/store/site-contacts`** віддають лише URL, пропущені через **`sanitize_store_site_href_url`** (блокуються `javascript:` тощо); на фронті додаткова перевірка перед `href`.
+- Усі маршрути **`/api/store/*`**, крім **`/api/store/i18n`**, вимагають валідну сесію (**`matrix_store_auth_middleware`** у [`run_webhook.py`](../../run_webhook.py)).
+- Подальше звуження полів у JSON відповідей магазину — ітеративний перегляд [`web/api/store_api.py`](../../web/api/store_api.py) за потреби.
