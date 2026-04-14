@@ -6,9 +6,21 @@
   <title>Store site</title>
   <link rel="icon" type="image/png" href="static/favicon-dark.png?v=storesite7" id="store-site-favicon" />
   <script src="static/theme-hint.js?v=storesite9"></script>
-  <link rel="stylesheet" href="static/style.css?v=storesite9" />
+  <link rel="stylesheet" href="static/style.css?v=storesite10" />
 </head>
 <body>
+  <div id="security-splash" class="security-splash" aria-hidden="true">
+    <div class="splash-icon" aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+        <path d="M32 4L8 14v18c0 13.2 10.4 25.6 24 29 13.6-3.4 24-15.8 24-29V14L32 4z" fill="currentColor" opacity="0.15"/>
+        <path d="M32 4L8 14v18c0 13.2 10.4 25.6 24 29 13.6-3.4 24-15.8 24-29V14L32 4z" stroke="currentColor" stroke-width="2" fill="none"/>
+        <path d="M22 32l7 7 13-13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="splash-spinner" aria-hidden="true"><span></span><span></span><span></span></div>
+    <p class="splash-text">Checking your browser</p>
+    <p class="splash-subtext">Please wait a moment…</p>
+  </div>
   <div id="app" class="app">
 
     <header class="app-header" id="appHeader" hidden>
@@ -178,6 +190,6 @@
     </div>
 
   </div>
-  <script src="static/app.bundle.js?v=storesite9"></script>
+  <script src="static/app.bundle.js?v=storesite10"></script>
 </body>
 </html>

@@ -1966,168 +1966,181 @@
       return { ok: false, status: r.status, payload: null };
     }
   }
+  function dismissSecuritySplash() {
+    var el = document.getElementById("security-splash");
+    if (!el || el.classList.contains("splash-done")) return;
+    el.classList.add("splash-done");
+    setTimeout(function() {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 450);
+  }
   async function boot() {
-    var sid = await resolveStoreBotIdEarly();
-    if (sid < 1) {
-      await loadI18n(PRE_LOCALE_UI);
-      document.getElementById("auth-msg").textContent = t("web.store_site.need_store_context");
-      showScreen("screen-auth");
-      return;
-    }
-    var cachedWT = readStoreAppearanceCache(sid);
-    if (cachedWT) {
-      applyStoreAppearanceFromWidgetTheme(cachedWT);
-    }
     try {
-      dlog("boot: parallel loadI18n + POST /api/public/store-site/bootstrap");
-      var parallel = await Promise.all([
-        loadI18n(PRE_LOCALE_UI),
-        fetchStoreSiteBootstrap(sid)
-      ]);
-      var bootWrap = parallel[1];
-      if (!bootWrap.ok) {
-        dlog("boot: bootstrap http status=" + bootWrap.status);
-        rlog("boot_bootstrap_failed http=" + bootWrap.status);
-        var amB = document.getElementById("auth-msg");
-        if (amB) {
-          if (bootWrap.status === 404 || bootWrap.status === 403) {
-            amB.textContent = t("web.store_site.need_store_context");
-          } else {
-            amB.textContent = t("errors.generic");
-          }
-        }
+      var sid = await resolveStoreBotIdEarly();
+      if (sid < 1) {
+        await loadI18n(PRE_LOCALE_UI);
+        document.getElementById("auth-msg").textContent = t("web.store_site.need_store_context");
         showScreen("screen-auth");
         return;
       }
-      var bootPayload = bootWrap.payload;
-      if (bootPayload && bootPayload.widget_theme) {
-        applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
-        persistStoreAppearanceCache(sid, bootPayload.widget_theme);
+      var cachedWT = readStoreAppearanceCache(sid);
+      if (cachedWT) {
+        applyStoreAppearanceFromWidgetTheme(cachedWT);
       }
-      if (bootPayload && bootPayload.store_name) {
-        var bn = String(bootPayload.store_name).trim();
-        if (bn) document.title = bn;
-      }
-    } catch (eB) {
-      dlog("boot: bootstrap fetch failed", eB && eB.message ? eB.message : eB);
-      rlog("boot_bootstrap_fetch_failed", eB && eB.message ? eB.message : String(eB));
       try {
-        await loadI18n(PRE_LOCALE_UI);
-      } catch (_e) {
-      }
-      var amx = document.getElementById("auth-msg");
-      if (amx) amx.textContent = t("errors.generic");
-      showScreen("screen-auth");
-      return;
-    }
-    showScreen("screen-auth");
-    document.getElementById("auth-msg").textContent = t("web.store_site.session_check");
-    var r;
-    try {
-      dlog("boot: fetching /api/store/me");
-      r = await apiFetch(API.me);
-      dlog("boot: /me http status=" + r.status);
-      if (!r.ok) {
-        rlog("boot_me_failed http=" + r.status);
-        await loadI18n(PRE_LOCALE_UI);
-        if (r.status === 401) {
-          document.getElementById("auth-msg").textContent = t("web.store_site.session_unavailable");
-        } else {
-          document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
+        dlog("boot: parallel loadI18n + POST /api/public/store-site/bootstrap");
+        var parallel = await Promise.all([
+          loadI18n(PRE_LOCALE_UI),
+          fetchStoreSiteBootstrap(sid)
+        ]);
+        var bootWrap = parallel[1];
+        if (!bootWrap.ok) {
+          dlog("boot: bootstrap http status=" + bootWrap.status);
+          rlog("boot_bootstrap_failed http=" + bootWrap.status);
+          var amB = document.getElementById("auth-msg");
+          if (amB) {
+            if (bootWrap.status === 404 || bootWrap.status === 403) {
+              amB.textContent = t("web.store_site.need_store_context");
+            } else {
+              amB.textContent = t("errors.generic");
+            }
+          }
+          showScreen("screen-auth");
+          return;
         }
+        var bootPayload = bootWrap.payload;
+        if (bootPayload && bootPayload.widget_theme) {
+          applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
+          persistStoreAppearanceCache(sid, bootPayload.widget_theme);
+          dismissSecuritySplash();
+        }
+        if (bootPayload && bootPayload.store_name) {
+          var bn = String(bootPayload.store_name).trim();
+          if (bn) document.title = bn;
+        }
+      } catch (eB) {
+        dlog("boot: bootstrap fetch failed", eB && eB.message ? eB.message : eB);
+        rlog("boot_bootstrap_fetch_failed", eB && eB.message ? eB.message : String(eB));
+        try {
+          await loadI18n(PRE_LOCALE_UI);
+        } catch (_e) {
+        }
+        var amx = document.getElementById("auth-msg");
+        if (amx) amx.textContent = t("errors.generic");
+        showScreen("screen-auth");
         return;
       }
-      var meData = await r.json();
-      applyStoreAppearanceFromMe(meData);
-      var mustPickLanguage = meData.locale_saved === false;
-      if (mustPickLanguage) {
-        await loadI18n(PRE_LOCALE_UI);
-        var guessed = guessLocale();
-        var localeOk = false;
-        try {
-          var lr = await apiFetch(API.locale, { method: "POST", json: { locale: guessed } });
-          localeOk = lr.ok;
-        } catch (errL) {
-          reportError("autoLocale", errL);
-        }
-        if (localeOk) {
-          await loadI18n(guessed);
-          r = await apiFetch(API.me);
-          if (!r.ok) {
-            rlog("boot_me_retry_failed http=" + r.status);
-            await loadI18n(PRE_LOCALE_UI);
-            document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
-            return;
-          }
-          meData = await r.json();
-          applyStoreAppearanceFromMe(meData);
-        } else {
-          var picked = await runInitialLanguagePicker();
-          if (!picked) return;
-          r = await apiFetch(API.me);
-          if (!r.ok) {
-            rlog("boot_me_retry_failed http=" + r.status);
-            await loadI18n(PRE_LOCALE_UI);
-            document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
-            return;
-          }
-          meData = await r.json();
-          applyStoreAppearanceFromMe(meData);
-        }
-      }
-      me = meData;
-      var loc = me.locale || guessLocale();
-      await loadI18n(loc);
-      document.getElementById("appHeader").hidden = false;
-      document.getElementById("bottomNav").hidden = false;
-      var sn0 = document.getElementById("siteNavDesktop");
-      if (sn0) sn0.hidden = false;
-      applyStoreShellTitle(me);
-      fillLocaleSelect(loc);
-      refreshLabels();
-      wireGoBackAndBottomNav();
-      wireQrModal();
-      wirePaymentCancelModal();
-      booted = true;
-      loadSiteContactsForShell();
-      if (!visibilityListenerWired) {
-        visibilityListenerWired = true;
-        document.addEventListener("visibilitychange", function() {
-          if (!booted || document.visibilityState !== "visible") return;
-          if (visibilityRefreshTimer) clearTimeout(visibilityRefreshTimer);
-          visibilityRefreshTimer = setTimeout(function() {
-            visibilityRefreshTimer = null;
-            if (document.visibilityState === "visible") {
-              refreshMe();
-            }
-          }, 400);
-        });
-      }
-      window.addEventListener("hashchange", function() {
-        onRouteChange();
-      });
-      var frag = location.hash;
-      if (!frag || frag === "#") {
-        try {
-          history.replaceState(null, "", location.pathname + location.search + "#shop");
-        } catch (e) {
-          location.hash = "#shop";
-        }
-      }
-      await onRouteChange();
-      dlog("boot: first route rendered");
-    } catch (err) {
-      dlog("boot: post-auth failed", err && err.message ? err.message : err);
-      rlog("boot_post_auth_failed", err && err.message ? err.message : String(err));
-      try {
-        await loadI18n(PRE_LOCALE_UI);
-      } catch (_e) {
-      }
-      var am = document.getElementById("auth-msg");
-      if (am) {
-        am.textContent = t("web.widget.session_load_failed");
-      }
       showScreen("screen-auth");
+      document.getElementById("auth-msg").textContent = t("web.store_site.session_check");
+      var r;
+      try {
+        dlog("boot: fetching /api/store/me");
+        r = await apiFetch(API.me);
+        dlog("boot: /me http status=" + r.status);
+        if (!r.ok) {
+          rlog("boot_me_failed http=" + r.status);
+          await loadI18n(PRE_LOCALE_UI);
+          if (r.status === 401) {
+            document.getElementById("auth-msg").textContent = t("web.store_site.session_unavailable");
+          } else {
+            document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
+          }
+          return;
+        }
+        var meData = await r.json();
+        applyStoreAppearanceFromMe(meData);
+        var mustPickLanguage = meData.locale_saved === false;
+        if (mustPickLanguage) {
+          await loadI18n(PRE_LOCALE_UI);
+          var guessed = guessLocale();
+          var localeOk = false;
+          try {
+            var lr = await apiFetch(API.locale, { method: "POST", json: { locale: guessed } });
+            localeOk = lr.ok;
+          } catch (errL) {
+            reportError("autoLocale", errL);
+          }
+          if (localeOk) {
+            await loadI18n(guessed);
+            r = await apiFetch(API.me);
+            if (!r.ok) {
+              rlog("boot_me_retry_failed http=" + r.status);
+              await loadI18n(PRE_LOCALE_UI);
+              document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
+              return;
+            }
+            meData = await r.json();
+            applyStoreAppearanceFromMe(meData);
+          } else {
+            var picked = await runInitialLanguagePicker();
+            if (!picked) return;
+            r = await apiFetch(API.me);
+            if (!r.ok) {
+              rlog("boot_me_retry_failed http=" + r.status);
+              await loadI18n(PRE_LOCALE_UI);
+              document.getElementById("auth-msg").textContent = t("web.widget.session_load_failed");
+              return;
+            }
+            meData = await r.json();
+            applyStoreAppearanceFromMe(meData);
+          }
+        }
+        me = meData;
+        var loc = me.locale || guessLocale();
+        await loadI18n(loc);
+        document.getElementById("appHeader").hidden = false;
+        document.getElementById("bottomNav").hidden = false;
+        var sn0 = document.getElementById("siteNavDesktop");
+        if (sn0) sn0.hidden = false;
+        applyStoreShellTitle(me);
+        fillLocaleSelect(loc);
+        refreshLabels();
+        wireGoBackAndBottomNav();
+        wireQrModal();
+        wirePaymentCancelModal();
+        booted = true;
+        loadSiteContactsForShell();
+        if (!visibilityListenerWired) {
+          visibilityListenerWired = true;
+          document.addEventListener("visibilitychange", function() {
+            if (!booted || document.visibilityState !== "visible") return;
+            if (visibilityRefreshTimer) clearTimeout(visibilityRefreshTimer);
+            visibilityRefreshTimer = setTimeout(function() {
+              visibilityRefreshTimer = null;
+              if (document.visibilityState === "visible") {
+                refreshMe();
+              }
+            }, 400);
+          });
+        }
+        window.addEventListener("hashchange", function() {
+          onRouteChange();
+        });
+        var frag = location.hash;
+        if (!frag || frag === "#") {
+          try {
+            history.replaceState(null, "", location.pathname + location.search + "#shop");
+          } catch (e) {
+            location.hash = "#shop";
+          }
+        }
+        await onRouteChange();
+        dlog("boot: first route rendered");
+      } catch (err) {
+        dlog("boot: post-auth failed", err && err.message ? err.message : err);
+        rlog("boot_post_auth_failed", err && err.message ? err.message : String(err));
+        try {
+          await loadI18n(PRE_LOCALE_UI);
+        } catch (_e) {
+        }
+        var am = document.getElementById("auth-msg");
+        if (am) {
+          am.textContent = t("web.widget.session_load_failed");
+        }
+        showScreen("screen-auth");
+      }
+    } finally {
+      dismissSecuritySplash();
     }
   }
 

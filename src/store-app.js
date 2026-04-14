@@ -2035,7 +2035,18 @@ import { rlog } from "./app/remoteLog.js";
     }
   }
 
+  /** Full-screen splash until theme is known; idempotent. */
+  function dismissSecuritySplash() {
+    var el = document.getElementById("security-splash");
+    if (!el || el.classList.contains("splash-done")) return;
+    el.classList.add("splash-done");
+    setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 450);
+  }
+
   async function boot() {
+    try {
     var sid = await resolveStoreBotIdEarly();
     if (sid < 1) {
       await loadI18n(PRE_LOCALE_UI);
@@ -2074,6 +2085,7 @@ import { rlog } from "./app/remoteLog.js";
       if (bootPayload && bootPayload.widget_theme) {
         applyStoreAppearanceFromWidgetTheme(bootPayload.widget_theme);
         persistStoreAppearanceCache(sid, bootPayload.widget_theme);
+        dismissSecuritySplash();
       }
       if (bootPayload && bootPayload.store_name) {
         var bn = String(bootPayload.store_name).trim();
@@ -2206,6 +2218,9 @@ import { rlog } from "./app/remoteLog.js";
         am.textContent = t("web.widget.session_load_failed");
       }
       showScreen("screen-auth");
+    }
+    } finally {
+      dismissSecuritySplash();
     }
   }
 
