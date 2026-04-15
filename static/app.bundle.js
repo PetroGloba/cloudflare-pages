@@ -739,7 +739,7 @@
     return low.startsWith("https://") || low.startsWith("http://");
   }
   var TG_SVG_FOOTER = '<svg class="site-footer-tg-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>';
-  var ELEMENT_SVG_FOOTER = '<svg class="site-footer-tg-icon" viewBox="0 0 27.9 32" aria-hidden="true"><path fill="currentColor" d="M13.95 0C6.24 0 0 6.24 0 13.95v4.1C0 25.76 6.24 32 13.95 32h0c7.71 0 13.95-6.24 13.95-13.95v-4.1C27.9 6.24 21.66 0 13.95 0zM9.15 8.44a.79.79 0 01.79.79v13.54a.79.79 0 01-1.58 0V9.23a.79.79 0 01.79-.79zm9.6 0a.79.79 0 01.79.79v13.54a.79.79 0 01-1.58 0V9.23a.79.79 0 01.79-.79zM8.36 10.02a.79.79 0 01.79-.79h13.54a.79.79 0 010 1.58H9.15a.79.79 0 01-.79-.79zm0 11.96a.79.79 0 01.79-.79h13.54a.79.79 0 010 1.58H9.15a.79.79 0 01-.79-.79z"/></svg>';
+  var ELEMENT_SVG_FOOTER = '<svg class="site-footer-tg-icon" viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(1.44 0) scale(0.754)"><path fill="currentColor" d="M13.95 0C6.24 0 0 6.24 0 13.95v4.1C0 25.76 6.24 32 13.95 32h0c7.71 0 13.95-6.24 13.95-13.95v-4.1C27.9 6.24 21.66 0 13.95 0zM9.15 8.44a.79.79 0 01.79.79v13.54a.79.79 0 01-1.58 0V9.23a.79.79 0 01.79-.79zm9.6 0a.79.79 0 01.79.79v13.54a.79.79 0 01-1.58 0V9.23a.79.79 0 01.79-.79zM8.36 10.02a.79.79 0 01.79-.79h13.54a.79.79 0 010 1.58H9.15a.79.79 0 01-.79-.79zm0 11.96a.79.79 0 01.79-.79h13.54a.79.79 0 010 1.58H9.15a.79.79 0 01-.79-.79z"/></g></svg>';
   function isElementContact(url) {
     return (url || "").indexOf("matrix.to") !== -1;
   }
@@ -1850,20 +1850,20 @@
       if (!r.ok) return;
       var data = await r.json();
       var buttons = data.buttons || [];
-      if (buttons.length === 0) return;
-      var section = document.createElement("div");
-      section.className = "custom-btns";
       buttons.forEach(function(b) {
         var rawUrl = (b.url || "").trim();
         if (!isSafeStoreHref(rawUrl)) return;
         var a = document.createElement("a");
+        a.className = "btn-primary contact-line";
         a.href = normalizeStoreHref(rawUrl);
         a.target = "_blank";
-        a.rel = "noopener";
-        a.textContent = b.label || rawUrl;
-        section.appendChild(a);
+        a.rel = "noopener noreferrer";
+        a.innerHTML = TG_SVG_FOOTER;
+        var span = document.createElement("span");
+        span.textContent = b.label || rawUrl;
+        a.appendChild(span);
+        parentEl.appendChild(a);
       });
-      parentEl.appendChild(section);
     } catch (_) {
     }
   }

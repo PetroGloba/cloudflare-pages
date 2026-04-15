@@ -612,9 +612,10 @@ import { rlog } from "./app/remoteLog.js";
     "</svg>";
 
   var ELEMENT_SVG_FOOTER =
-    '<svg class="site-footer-tg-icon" viewBox="0 0 27.9 32" aria-hidden="true">' +
+    '<svg class="site-footer-tg-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+    '<g transform="translate(1.44 0) scale(0.754)">' +
     '<path fill="currentColor" d="M13.95 0C6.24 0 0 6.24 0 13.95v4.1C0 25.76 6.24 32 13.95 32h0c7.71 0 13.95-6.24 13.95-13.95v-4.1C27.9 6.24 21.66 0 13.95 0zM9.15 8.44a.79.79 0 01.79.79v13.54a.79.79 0 01-1.58 0V9.23a.79.79 0 01.79-.79zm9.6 0a.79.79 0 01.79.79v13.54a.79.79 0 01-1.58 0V9.23a.79.79 0 01.79-.79zM8.36 10.02a.79.79 0 01.79-.79h13.54a.79.79 0 010 1.58H9.15a.79.79 0 01-.79-.79zm0 11.96a.79.79 0 01.79-.79h13.54a.79.79 0 010 1.58H9.15a.79.79 0 01-.79-.79z"/>' +
-    "</svg>";
+    "</g></svg>";
 
   function isElementContact(url) {
     return (url || "").indexOf("matrix.to") !== -1;
@@ -1909,21 +1910,20 @@ import { rlog } from "./app/remoteLog.js";
       if (!r.ok) return;
       var data = await r.json();
       var buttons = data.buttons || [];
-      if (buttons.length === 0) return;
-
-      var section = document.createElement("div");
-      section.className = "custom-btns";
       buttons.forEach(function (b) {
         var rawUrl = (b.url || "").trim();
         if (!isSafeStoreHref(rawUrl)) return;
         var a = document.createElement("a");
+        a.className = "btn-primary contact-line";
         a.href = normalizeStoreHref(rawUrl);
         a.target = "_blank";
-        a.rel = "noopener";
-        a.textContent = b.label || rawUrl;
-        section.appendChild(a);
+        a.rel = "noopener noreferrer";
+        a.innerHTML = TG_SVG_FOOTER;
+        var span = document.createElement("span");
+        span.textContent = b.label || rawUrl;
+        a.appendChild(span);
+        parentEl.appendChild(a);
       });
-      parentEl.appendChild(section);
     } catch (_) { /* non-critical */ }
   }
 

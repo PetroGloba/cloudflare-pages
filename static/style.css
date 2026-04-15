@@ -928,25 +928,6 @@ body {
   background: var(--bg);
 }
 
-/* ── Custom buttons ── */
-.custom-btns { margin-top: 1rem; }
-.custom-btns a {
-  display: block;
-  padding: 0.7rem 1.15rem;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  color: var(--accent);
-  text-decoration: none;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  border: 1px solid var(--border-muted);
-  min-height: var(--btn-min-height);
-  line-height: 1.4;
-  box-sizing: border-box;
-  box-shadow: var(--shadow-card);
-}
-.custom-btns a:active { opacity: 0.7; }
-
 /* ── Skeleton loading ── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
@@ -1171,10 +1152,6 @@ body {
 .lang-picker-option:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-}
-.custom-btns a:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 a.contact-line:focus-visible {
   outline: 2px solid var(--accent);
