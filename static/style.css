@@ -1189,10 +1189,18 @@ a.contact-line:focus-visible {
   padding: 0 0 0.5rem;
 }
 a.contact-line {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   text-align: center;
   text-decoration: none;
   box-sizing: border-box;
+}
+a.contact-line .site-footer-tg-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
 }
 
 /* ── Desktop layout: top primary nav, wider shell, grids ── */
