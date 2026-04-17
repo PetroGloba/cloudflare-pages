@@ -1142,9 +1142,14 @@ import { rlog } from "./app/remoteLog.js";
         card.className = "pos-card";
 
         var rawPu = pos.photo_url || "";
-        var imgSrc = isSafeHttpUrlForEmbed(rawPu) ? rawPu.trim() : NO_PHOTO_SVG;
-        var imgHtml = '<img class="pos-card-img" src="' + escHtml(imgSrc) +
-          '" alt="" loading="lazy" onerror="this.src=\'' + NO_PHOTO_SVG + '\'">';
+        // photo_url from our API is a trusted same-origin path; allow '/' prefix in addition to http(s)
+        var imgSrc = (rawPu && (rawPu.charAt(0) === "/" || isSafeHttpUrlForEmbed(rawPu))) ? rawPu.trim() : NO_PHOTO_SVG;
+        var cardImg = document.createElement("img");
+        cardImg.className = "pos-card-img";
+        cardImg.src = imgSrc;
+        cardImg.alt = "";
+        cardImg.loading = "lazy";
+        cardImg.addEventListener("error", function () { this.src = NO_PHOTO_SVG; }, { once: true });
 
         var priceHtml = '<span class="price-effective">' +
           escHtml(String(pos.effective_price)) + " " + escHtml(pos.currency || "") + "</span>";
@@ -1154,11 +1159,12 @@ import { rlog } from "./app/remoteLog.js";
           priceHtml += ' <span class="discount-badge">-' + pos.discount_percent + "%</span>";
         }
 
-        card.innerHTML = imgHtml +
+        card.appendChild(cardImg);
+        card.insertAdjacentHTML("beforeend",
           '<div class="pos-card-body">' +
           '<p class="pos-card-name">' + escHtml(pos.name) + "</p>" +
           '<div class="price-row">' + priceHtml + "</div>" +
-          "</div>";
+          "</div>");
 
         card.onclick = function () {
           navigate("#structures/" + cityId + "/" + pos.id);
@@ -1816,7 +1822,7 @@ import { rlog } from "./app/remoteLog.js";
         html += '</div><div class="pay-detail-photos">';
         photos.forEach(function (url) {
           html += '<img src="' + escHtml(url) + '" alt="" loading="lazy" ' +
-            'style="max-width:240px" onerror="this.style.display=\'none\'">';
+            'style="max-width:240px">';
         });
         html += "</div>";
       }
@@ -1834,6 +1840,10 @@ import { rlog } from "./app/remoteLog.js";
       }
 
       cont.innerHTML = html;
+
+      cont.querySelectorAll(".pay-detail-photos img").forEach(function (img) {
+        img.addEventListener("error", function () { this.style.display = "none"; }, { once: true });
+      });
 
       var checkBtn = document.getElementById("account-payment-check-btn");
       if (checkBtn) {
