@@ -5,7 +5,8 @@
   "version": "1.0.0",
   "description": "Public store web UI (forked from matrix widget; adapt here only)",
   "scripts": {
-    "build": "NODE_ENV=production node esbuild.config.mjs",
+    "check:csp": "node scripts/check-csp-compliance.mjs",
+    "build": "node scripts/check-csp-compliance.mjs --source-only && NODE_ENV=production node esbuild.config.mjs && node scripts/check-csp-compliance.mjs",
     "watch": "node esbuild.config.mjs --watch",
     "preview": "npm run build && npx --yes serve . -l 4173 --no-request-logging",
     "serve": "npx --yes serve . -l 4173 --no-request-logging",

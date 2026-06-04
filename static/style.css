@@ -685,6 +685,10 @@ body {
 }
 
 .msg { color: var(--muted); line-height: 1.5; }
+.msg--mb-sm { margin-bottom: 0.5rem; }
+.msg--mt-sm { margin-top: 0.5rem; }
+.msg--success { color: var(--green); }
+.msg--danger { color: var(--danger); }
 
 .result-body {
   white-space: pre-wrap;
@@ -872,6 +876,8 @@ body {
   margin-bottom: 0.15rem;
 }
 .review-stars { color: var(--accent); margin: 0; }
+.review-avg-summary { margin-bottom: 0.75rem; }
+.review-avg-score { color: var(--muted); font-size: 0.85rem; }
 .review-date {
   font-size: 0.75rem;
   color: var(--muted);
@@ -909,6 +915,12 @@ body {
   box-shadow: var(--shadow-card);
 }
 .pay-detail p { margin: 0 0 0.25rem; }
+.pay-detail-title { font-weight: 600; font-size: 1rem; }
+.pay-detail-sub { color: var(--muted); font-size: 0.85rem; }
+.pay-detail-amount { margin-top: 0.5rem; }
+.pay-detail-ledger { font-size: 0.85rem; color: var(--muted); }
+.pay-detail-address { margin-top: 0.5rem; font-size: 0.9rem; word-break: break-all; }
+.pay-detail-date { font-size: 0.75rem; color: var(--muted); }
 .pay-detail-links { margin-top: 0.5rem; }
 .pay-product-link-wrap { margin: 0.25rem 0 0; }
 .pay-product-link {
@@ -923,10 +935,15 @@ body {
   margin-top: 0.5rem;
 }
 .pay-detail-photos img {
-  max-width: 100%;
+  max-width: 240px;
   border-radius: 8px;
   background: var(--bg);
 }
+.pay-detail-photos img.is-broken { display: none; }
+.pay-product-note { margin-top: 0.5rem; white-space: pre-wrap; }
+
+.btn-block { width: 100%; }
+.btn-block--spaced { margin-top: 0.75rem; }
 
 /* ── Skeleton loading ── */
 @keyframes shimmer {

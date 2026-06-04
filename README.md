@@ -58,7 +58,15 @@ npm run preview
 
 ### Заголовки безпеки (CSP)
 
-Файл [**`_headers`**](_headers) застосовується Cloudflare Pages до видачі статики (CSP, `frame-ancestors 'none'`, `Referrer-Policy` тощо). Якщо в консолі браузера з’являються порушення CSP (наприклад, зовнішні шрифти або картинки), розширте відповідну директиву в `_headers`. Дублювати ті самі заголовки можна правилами **Transform Rules** у Cloudflare для зони домену.
+Файл [**`_headers`**](_headers) застосовується Cloudflare Pages до видачі статики: суворий CSP (`script-src 'self'`, `style-src 'self'`, без `'unsafe-inline'`), `frame-ancestors 'none'`, `Referrer-Policy` тощо. Якщо в консолі з’являються порушення через зовнішні ресурси (шрифти, картинки), розширте відповідну директиву в `_headers`. Дублювати заголовки можна **Transform Rules** у Cloudflare.
+
+#### CSP і Cloudflare
+
+При **`script-src 'self'`** inline-скрипт Cloudflare (Under Attack / challenge platform у page source) **блокується браузером** — це очікувано: edge-захист CF працює до HTML, суворий CSP захищає від XSS. У консолі може лишатися **одна** помилка `script-src-elem` для `/cdn-cgi/` — **не додавайте** `'unsafe-inline'` і **не копіюйте hash** з DevTools.
+
+Перед деплоєм: **`npm run check:csp`** (також входить у **`npm run build`**) — перевірка відсутності `style="`, `onerror=`, `onclick=` у HTML-рядках у `src/store-app.js` і `static/app.bundle.js`.
+
+Деталі для нового домену та Under Attack: [**`docs/cloudflare-new-store-domain.md`**](../../docs/cloudflare-new-store-domain.md) — **етап 6**.
 
 ## Тести фронту
 

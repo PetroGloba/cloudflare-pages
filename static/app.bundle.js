@@ -222,6 +222,17 @@
 
   // src/store-app.js
   var PRE_LOCALE_UI = "en";
+  function appendProductDeliveryText(baseText, payload) {
+    var text = baseText || "";
+    if (payload && payload.product_lines && payload.product_lines.length) {
+      text += "\n\n" + payload.product_lines.join("\n");
+    }
+    var note = payload && payload.product_upload_note;
+    if (note && String(note).trim()) {
+      text += "\n\n" + String(note).trim();
+    }
+    return text.trim();
+  }
   var LOCALES = [
     { code: "uk", label: "\u0423\u043A\u0440\u0430\u0457\u043D\u0441\u044C\u043A\u0430", flag: "\u{1F1FA}\u{1F1E6}" },
     { code: "pl", label: "Polski", flag: "\u{1F1F5}\u{1F1F1}" },
@@ -1397,11 +1408,10 @@
         resEl.textContent = j.message || "";
         if (j.paid) {
           await refreshMe();
-          var text = j.message || "";
-          if (j.product_lines && j.product_lines.length) {
-            text += "\n\n" + j.product_lines.join("\n");
-          }
-          resultState = { text: text.trim(), ok: true };
+          resultState = {
+            text: appendProductDeliveryText(j.message || "", j),
+            ok: true
+          };
           resetCheckoutPayUI();
           confirmData = null;
           navigate("#result", { replace: true });
@@ -1437,9 +1447,9 @@
           return;
         }
         resEl.textContent = j.message || "";
-        if (j.paid && j.product_lines && j.product_lines.length) {
+        if (j.paid && (j.product_lines && j.product_lines.length || j.product_upload_note)) {
           resultState = {
-            text: ((j.message || "") + "\n\n" + j.product_lines.join("\n")).trim(),
+            text: appendProductDeliveryText(j.message || "", j),
             ok: true
           };
           resetCheckoutPayUI();
@@ -1539,11 +1549,10 @@
               );
               return;
             }
-            var text = sj.message || "";
-            if (sj.product_lines && sj.product_lines.length) {
-              text += "\n\n" + sj.product_lines.join("\n");
-            }
-            resultState = { text: text.trim(), ok: true };
+            resultState = {
+              text: appendProductDeliveryText(sj.message || "", sj),
+              ok: true
+            };
             confirmData = null;
             await refreshMe();
             navigate("#result", { replace: true });
@@ -1605,7 +1614,7 @@
       var html = "";
       if (data.average_rating !== null && data.average_rating !== void 0) {
         var avgStars = renderStarsHtml(Math.round(data.average_rating));
-        html += '<div style="margin-bottom:0.75rem">' + avgStars + ' <span style="color:var(--muted);font-size:0.85rem">' + escHtml(String(data.average_rating)) + " / 5 (" + (data.total_count || 0) + ")</span></div>";
+        html += '<div class="review-avg-summary">' + avgStars + ' <span class="review-avg-score">' + escHtml(String(data.average_rating)) + " / 5 (" + (data.total_count || 0) + ")</span></div>";
       }
       var reviews = data.reviews || [];
       if (reviews.length === 0) {
@@ -1652,7 +1661,7 @@
     n = Math.max(0, Math.min(5, n));
     var s = "";
     for (var i = 0; i < 5; i++) s += i < n ? "\u2605" : "\u2606";
-    return '<span style="color:var(--accent)">' + s + "</span>";
+    return '<span class="review-stars">' + s + "</span>";
   }
   async function showReviewCreate(paymentId, token) {
     var cont = document.getElementById("reviews-content");
@@ -1673,7 +1682,7 @@
     var selectedRating = 0;
     var html = "";
     if (payInfo) {
-      html += '<p class="msg" style="margin-bottom:0.5rem">' + escHtml((payInfo.position_name || "") + (payInfo.structure_name ? " / " + payInfo.structure_name : "")) + "</p>";
+      html += '<p class="msg msg--mb-sm">' + escHtml((payInfo.position_name || "") + (payInfo.structure_name ? " / " + payInfo.structure_name : "")) + "</p>";
     }
     html += '<p class="field-label">' + escHtml(t("review.rating_label") || "Rating") + "</p>";
     html += '<div class="star-picker" id="star-picker">';
@@ -1718,14 +1727,16 @@
         var j = await rr.json();
         var msgEl = document.getElementById("review-msg");
         if (rr.ok && j.ok) {
-          msgEl.style.color = "var(--green)";
+          msgEl.classList.remove("msg--success", "msg--danger");
+          msgEl.classList.add("msg--success");
           msgEl.textContent = j.message || t("review.thanks_pending") || "Thank you!";
           submitBtn.hidden = true;
           setTimeout(function() {
             navigate("#reviews", { resetStack: true });
           }, 1500);
         } else {
-          msgEl.style.color = "var(--danger)";
+          msgEl.classList.remove("msg--success", "msg--danger");
+          msgEl.classList.add("msg--danger");
           msgEl.textContent = j.message || t("web.store.purchase_failed");
           submitBtn.disabled = false;
           submitBtn.textContent = t("review.publish") || "Submit";
@@ -1733,7 +1744,8 @@
       } catch (e) {
         if (e.message === "unauthorized") return;
         var msgEl2 = document.getElementById("review-msg");
-        msgEl2.style.color = "var(--danger)";
+        msgEl2.classList.remove("msg--success", "msg--danger");
+        msgEl2.classList.add("msg--danger");
         msgEl2.textContent = t("web.store.purchase_failed");
         submitBtn.disabled = false;
         submitBtn.textContent = t("review.publish") || "Submit";
@@ -1757,21 +1769,21 @@
       var p = await r.json();
       if (token !== renderToken) return;
       var html = '<div class="pay-detail">';
-      html += '<p style="font-weight:600;font-size:1rem">#' + p.id + " \u2014 " + escHtml(p.order_id) + "</p>";
+      html += '<p class="pay-detail-title">#' + p.id + " \u2014 " + escHtml(p.order_id) + "</p>";
       if (p.position_name) html += "<p>" + escHtml(p.position_name) + "</p>";
       if (p.structure_name || p.city_name) {
-        html += '<p style="color:var(--muted);font-size:0.85rem">' + escHtml([p.structure_name, p.city_name].filter(Boolean).join(" \xB7 ")) + "</p>";
+        html += '<p class="pay-detail-sub">' + escHtml([p.structure_name, p.city_name].filter(Boolean).join(" \xB7 ")) + "</p>";
       }
       var mainAmt = p.invoice_amount !== void 0 && p.invoice_amount !== null && p.invoice_amount !== "" ? String(p.invoice_amount) + " " + String(p.invoice_currency || p.currency || "") : String(p.amount) + " " + String(p.currency || "");
-      html += '<p style="margin-top:0.5rem">' + escHtml(mainAmt) + " \u2014 <strong>" + escHtml(p.status_label) + "</strong></p>";
+      html += '<p class="pay-detail-amount">' + escHtml(mainAmt) + " \u2014 <strong>" + escHtml(p.status_label) + "</strong></p>";
       if (p.ledger_amount != null && p.ledger_amount !== "" && p.ledger_currency) {
-        html += '<p style="font-size:0.85rem;color:var(--muted)">' + escHtml(t("account.ledger_amount")) + ": " + escHtml(String(p.ledger_amount) + " " + String(p.ledger_currency)) + "</p>";
+        html += '<p class="pay-detail-ledger">' + escHtml(t("account.ledger_amount")) + ": " + escHtml(String(p.ledger_amount) + " " + String(p.ledger_currency)) + "</p>";
       }
       if (p.payment_address) {
-        html += '<p style="margin-top:0.5rem;font-size:0.9rem;word-break:break-all">' + escHtml(t("account.pay_address")) + ": " + escHtml(String(p.payment_address)) + "</p>";
+        html += '<p class="pay-detail-address">' + escHtml(t("account.pay_address")) + ": " + escHtml(String(p.payment_address)) + "</p>";
       }
       if (p.created_at) {
-        html += '<p style="font-size:0.75rem;color:var(--muted)">' + escHtml(new Date(p.created_at).toLocaleString()) + "</p>";
+        html += '<p class="pay-detail-date">' + escHtml(new Date(p.created_at).toLocaleString()) + "</p>";
       }
       var photos = (p.product_photos || []).filter(isSafeHttpUrlForEmbed);
       if (photos.length > 0) {
@@ -1783,22 +1795,25 @@
         });
         html += '</div><div class="pay-detail-photos">';
         photos.forEach(function(url) {
-          html += '<img src="' + escHtml(url) + '" alt="" loading="lazy" style="max-width:240px">';
+          html += '<img src="' + escHtml(url) + '" alt="" loading="lazy">';
         });
         html += "</div>";
       }
+      if (p.product_upload_note && String(p.product_upload_note).trim()) {
+        html += '<p class="pay-product-note">' + escHtml(String(p.product_upload_note).trim()) + "</p>";
+      }
       html += "</div>";
       if (p.provider_check_available) {
-        html += '<button type="button" class="btn-primary" style="width:100%;margin-top:0.75rem" id="account-payment-check-btn">' + escHtml(t("payment.check_status") || t("web.widget.topup_check") || "Check status") + "</button>";
-        html += '<p class="msg" id="account-payment-check-msg" style="margin-top:0.5rem"></p>';
+        html += '<button type="button" class="btn-primary btn-block btn-block--spaced" id="account-payment-check-btn">' + escHtml(t("payment.check_status") || t("web.widget.topup_check") || "Check status") + "</button>";
+        html += '<p class="msg msg--mt-sm" id="account-payment-check-msg"></p>';
       }
       if (p.can_review) {
-        html += '<button type="button" class="btn-primary" style="width:100%" id="leave-review-btn">' + escHtml(t("review.leave") || "Leave review") + "</button>";
+        html += '<button type="button" class="btn-primary btn-block" id="leave-review-btn">' + escHtml(t("review.leave") || "Leave review") + "</button>";
       }
       cont.innerHTML = html;
       cont.querySelectorAll(".pay-detail-photos img").forEach(function(img) {
         img.addEventListener("error", function() {
-          this.style.display = "none";
+          this.classList.add("is-broken");
         }, { once: true });
       });
       var checkBtn = document.getElementById("account-payment-check-btn");
